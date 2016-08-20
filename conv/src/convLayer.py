@@ -34,7 +34,7 @@ class ConvLayer(object):
     def forward(self, input):
         padded_input = numpy.pad(input, pad_width=self.padding, mode='constant', constant_values=0)
         if padded_input.shape[2] != input.shape[2]:
-            padded_input = padded_input[1:-1, :, :]
+            padded_input = padded_input[self.padding:-self.padding, :, :]
         out_filter_map = Matrix.with_matrix(numpy.zeros((self.depth, self.out_filter_map_x, self.out_filter_map_y)))
         padded_x = padded_input.shape[1]
         padded_y = padded_input.shape[2]
@@ -60,15 +60,31 @@ class ConvLayer(object):
         if padded_input.shape[2] != input.shape[2]:
             padded_input = padded_input[self.stride:-self.stride, :, :]
 
+        # flatten to single matrix
+        input_y, input_x, input_z = padded_input.shape
+        padded_input = padded_input.reshape(input_z * input_y, input_x)
+
         # Parameters
-        input_y, input_x = input.shape
+        input_y, input_x = padded_input.shape
 
         # Get Starting block indices
-        start_idx = numpy.arange(self.filter_y)[:,None]*input_x + numpy.arange(self.filter_x)
+        start_idx = numpy.arange(self.filter_y )[:,None]*input_x + numpy.arange(self.filter_x)
 
         # Get offsetted indices across the height and width of input array
-        offset_idx = numpy.arange(self.out_filter_map_y)[:,None]*input_x + numpy.arange(self.out_filter_map_x)
+        offset_idx = numpy.arange(self.out_filter_map_y)[:,None]*input_x  + numpy.arange(self.out_filter_map_x)
+
+        dimension_offsets = (numpy.arange(input_z).reshape(input_z, 1, 1) * (input_y))
+
+        all_indexes = numpy.empty((input_z, input_y, self.out_filter_map_x), dtype=numpy.int)
+        all_indexes[:] = (start_idx.ravel()[:, None] + offset_idx.ravel()) + dimension_offsets
 
         # Get all actual indices & index into input array for final output
-        out = numpy.take (padded_input,start_idx.ravel()[:,None] + offset_idx.ravel())
+        out_filter_map = Matrix.with_matrix(numpy.zeros((self.depth, self.out_filter_map_x, self.out_filter_map_y)))
 
+        for f in range(0, len(self.filters)):
+           f_y, f_x, f_z = self.filters[f].m.shape
+           filter_map = padded_input.take(all_indexes.reshape((1, input_y, self.out_filter_map_x * input_z))) * \
+                        numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_z * f_y), offset_idx.shape[1], 0).reshape(1, input_y, self.out_filter_map_x * input_z)
+           out_filter_map.m[f, :, :] = filter_map.sum()
+
+        return out_filter_map
