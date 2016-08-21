@@ -114,6 +114,6 @@ class ConvLayer(object):
         for f in range(0, len(self.filters)):
             f_y, f_x, f_z = self.filters[f].m.shape
             filter_map = input_matrix * numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_z * f_y), 9, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
-            print(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_z * f_y, f_z * f_x))
+            print(numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_z * f_y, f_z * f_x), axis=2).sum(axis=0))
 
         return out_filter_map
