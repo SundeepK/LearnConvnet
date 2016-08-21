@@ -32,10 +32,9 @@ class ConvLayerTest(unittest.TestCase):
         undertest = ConvLayer.with_filters([Matrix.with_matrix(filter)], 3, 3, 1, 0)
         array = np.zeros((1, 1, 1))
         array[0, 0, 0] = -5
-        print(undertest.forward(input).m)
-        # assert np.array_equiv(undertest.forward(input).m, array)
+        assert np.array_equiv(undertest.forward(input).m, array)
 
-    def test_forward_multiple_filter(self):
+    def test_forward_multiple_filter_passes(self):
         input = np.array([[[ 0, 0, 1, 2, 1],
                            [ 2, 1, 0, 0, 0],
                            [ 0, 0, 2, 2, 0],
@@ -69,7 +68,6 @@ class ConvLayerTest(unittest.TestCase):
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
                                          [3, 9, 5]]])
-        print(undertest.forward(input).m)
         assert np.array_equiv(undertest.forward(input).m, expected_filter_map)
 
 
@@ -102,9 +100,7 @@ class ConvLayerTest(unittest.TestCase):
         array[0, 0, 0] = -5
         assert np.array_equiv(undertest.vectorized_forward(input).m, array)
 
-    def test_vectorized_forward_multiple_filter(self):
-
-
+    def test_vectorized_forward_multiple_filter_passes(self):
         input = np.array([[[ 0, 0, 1, 2, 1],
                            [ 2, 1, 0, 0, 0],
                            [ 0, 0, 2, 2, 0],
@@ -134,6 +130,17 @@ class ConvLayerTest(unittest.TestCase):
                            [[1, -1, -1],
                             [ 0, 1, -1],
                             [ -1, -1, -1]]])
+
+        np.array([[[0,  0,  0,  0, -1,  0,  0,  0,  0,  0,  0,  0,  0, -1, -1,  0, -1, -1,  0,  0,  0,  0,  2,  1, 0,  1,  0],
+                  [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  1,  1,  1,  2,  1,  0,  0,  0,  0, -2,  0, 0,  0, -1],
+                  [ 0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  0,  1,  1,  0,  0,  0,  0, -2, -1,  0, 1,  0,  0],
+                  [ 0,  0,  2,  0,  0,  2,  0,  2,  1,  0,  1,  0,  0,  2,  1,  0,  2,  2,  0,  0,  0,  0,  0,  0, 0,  0,  0],
+                  [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  1,  1,  0,  0,  1,  1,  0,  0,  0,  1,  0, 0,  0,  2],
+                  [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  2,  1,  0,  2,  2,  0, -2, -2,  0,  0,  0,  0, 0,  0,  0],
+                  [ 0,  1,  0,  0,  0,  0,  0,  0,  0,  0, -1, -1,  0, -1, -1,  0,  0,  0,  0, -2, -1,  0, -1,  0, 0,  0,  0],
+                  [-2,  0,  0,  0,  0,  0,  0,  0,  0,  2,  1,  1,  1,  2,  1,  0,  0,  0,  0, -2,  0,  0,  0, -1, 0,  0,  0],
+                  [ 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, -2, -1,  0, -1,  0,  0, 0,  0,  0]]])
+
         undertest = ConvLayer.with_filters([Matrix.with_matrix(filter)], 5, 5, 2, 1)
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
