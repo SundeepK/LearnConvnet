@@ -98,7 +98,7 @@ class ConvLayerTest(unittest.TestCase):
         undertest = ConvLayer.with_filters([Matrix.with_matrix(filter)], 3, 3, 1, 0)
         array = np.zeros((1, 1, 1))
         array[0, 0, 0] = -5
-        assert np.array_equiv(undertest.vectorized_forward(input).m, array)
+        assert np.array_equiv(undertest.vectorized_forward(input)[0], array)
 
     def test_vectorized_forward_multiple_filter_passes(self):
         input = np.array([[[ 0, 0, 1, 2, 1],

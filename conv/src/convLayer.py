@@ -79,18 +79,20 @@ class ConvLayer(object):
         offset_idx = (numpy.arange(0, row_extent, self.stride)[:,None]*input_x + numpy.arange(0, col_extent, self.stride))
 
         dimension_offsets = (numpy.arange(input_z).reshape(input_z, 1, 1) * (input_total_size))
-        all_indexes = numpy.empty((input_z, input_z * self.filter_y, input_z * self.filter_x), dtype=numpy.int)
-        all_indexes[:] = (start_idx.ravel()[:, None] + offset_idx.ravel()) + dimension_offsets
-        all_indexes = numpy.hstack(all_indexes)
-
+        all_indexes = numpy.hstack((start_idx.ravel()[:, None] + offset_idx.ravel()) + dimension_offsets)
         input_matrix = padded_input.take(all_indexes)
 
         # Get all actual indices & index into input array for final output
         out_filter_map = numpy.empty(len(self.filters), dtype=object)
         for f in range(0, len(self.filters)):
             f_y, f_x, f_z = self.filters[f].m.shape
-            filter_map = input_matrix * numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_z * f_y), 9, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
-            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_z * f_y, f_z * f_x), axis=2).sum(axis=0)
+            filter_map = input_matrix * numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_z * f_y), self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
+            # since examples are rolled next to each other we need to unroll then back to ndarray so that we can
+            # sum across filters correctly
+            total = offset_idx.shape[0] * offset_idx.shape[1]
+            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_y * f_x, total), axis=2).sum(axis=0)
+            if self.out_filter_map_x * self.out_filter_map_y == 1:
+                sum = numpy.sum(sum)
             out_filter_map[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
 
         return out_filter_map
