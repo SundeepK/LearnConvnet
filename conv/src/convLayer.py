@@ -67,8 +67,6 @@ class ConvLayer(object):
         col_extent = input_x - self.filter_x + 1
         row_extent = input_y - self.filter_y + 1
 
-        filter_repeat = (col_extent + row_extent)
-
         padded_input = padded_input.reshape(input_z * input_y, input_x)
 
         # Parameters
@@ -80,28 +78,6 @@ class ConvLayer(object):
         # Get off-setted indices across the height and width of input array
         offset_idx = (numpy.arange(0, row_extent, self.stride)[:,None]*input_x + numpy.arange(0, col_extent, self.stride))
 
-        print(padded_input)
-        print("\n")
-
-        # print("col_extent " + str(col_extent) + " row_extent " + str(row_extent))
-        # print("\n")
-        #
-        # print("input_x " + str(input_x) + " input_y " + str(input_y))
-        # print("\n")
-
-
-        # print(start_idx)
-        # print("\n")
-        #
-        # print("\n")
-        # print(offset_idx)
-        #
-        # print((start_idx.ravel()[:, None] + offset_idx.ravel()))
-
-
-        # print("\n")
-        # print((start_idx.ravel()[:, None] + offset_idx.ravel()))
-
         dimension_offsets = (numpy.arange(input_z).reshape(input_z, 1, 1) * (input_total_size))
         all_indexes = numpy.empty((input_z, input_z * self.filter_y, input_z * self.filter_x), dtype=numpy.int)
         all_indexes[:] = (start_idx.ravel()[:, None] + offset_idx.ravel()) + dimension_offsets
@@ -110,10 +86,11 @@ class ConvLayer(object):
         input_matrix = padded_input.take(all_indexes)
 
         # Get all actual indices & index into input array for final output
-        out_filter_map = Matrix.with_matrix(numpy.zeros((self.depth, self.out_filter_map_x, self.out_filter_map_y)))
+        out_filter_map = numpy.empty(len(self.filters), dtype=object)
         for f in range(0, len(self.filters)):
             f_y, f_x, f_z = self.filters[f].m.shape
             filter_map = input_matrix * numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_z * f_y), 9, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
-            print(numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_z * f_y, f_z * f_x), axis=2).sum(axis=0))
+            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_z * f_y, f_z * f_x), axis=2).sum(axis=0)
+            out_filter_map[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
 
         return out_filter_map
