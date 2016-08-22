@@ -2,6 +2,8 @@ import unittest
 import numpy as np
 from matrix import Matrix
 from convLayer import ConvLayer
+import timeit
+import time
 
 class ConvLayerTest(unittest.TestCase):
 
@@ -68,7 +70,10 @@ class ConvLayerTest(unittest.TestCase):
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
                                          [3, 9, 5]]])
+        start_time = timeit.default_timer()
         assert np.array_equiv(undertest.forward(input).m, expected_filter_map)
+        print(timeit.default_timer() - start_time)
+
 
 
     def test_vectorized_forward_single_filter(self):
@@ -135,7 +140,9 @@ class ConvLayerTest(unittest.TestCase):
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
                                          [3, 9, 5]]])
+        start_time = timeit.default_timer()
         assert np.array_equiv(undertest.vectorized_forward(input)[0], expected_filter_map)
+        print(timeit.default_timer() - start_time)
 
 if __name__ == '__main__':
     unittest.main()
