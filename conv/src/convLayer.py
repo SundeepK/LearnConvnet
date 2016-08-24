@@ -90,7 +90,7 @@ class ConvLayer(object):
             # since examples are rolled next to each other we need to unroll then back to ndarray so that we can
             # sum across filters correctly
             total = offset_idx.shape[0] * offset_idx.shape[1]
-            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose(), axis=1).reshape(f_z, total).sum(axis=0)
+            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
             out_filter_map[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
