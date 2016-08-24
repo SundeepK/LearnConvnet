@@ -28,7 +28,7 @@ class ConvLayer(object):
 
     @classmethod
     def with_filters(cls, filters, input_x, input_y, stride, padding):
-        obj = cls(input_x, input_y, stride, padding, filters[0].x, filters[0].y, len(filters), filters)
+        obj = cls(input_x, input_y, stride, padding, filters[0].y, filters[0].x, len(filters), filters)
         return obj
 
     def forward(self, input):
@@ -85,12 +85,12 @@ class ConvLayer(object):
         # Get all actual indices & index into input array for final output
         out_filter_map = numpy.empty(len(self.filters), dtype=object)
         for f in range(0, len(self.filters)):
-            f_y, f_x, f_z = self.filters[f].m.shape
-            filter_map = input_matrix * numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_z * f_y), self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
+            f_z, f_y, f_x = self.filters[f].m.shape
+            filter_map = input_matrix * numpy.repeat(self.filters[f].m.reshape(f_z, 1, f_x * f_y), self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
             # since examples are rolled next to each other we need to unroll then back to ndarray so that we can
             # sum across filters correctly
             total = offset_idx.shape[0] * offset_idx.shape[1]
-            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose().ravel().reshape(f_z, f_y * f_x, total), axis=2).sum(axis=0)
+            sum = numpy.sum(filter_map.reshape(input_matrix.shape[0], input_matrix.shape[1]).transpose(), axis=1).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
             out_filter_map[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
