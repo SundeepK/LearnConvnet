@@ -75,7 +75,6 @@ class ConvLayerTest(unittest.TestCase):
         print(timeit.default_timer() - start_time)
 
 
-
     def test_vectorized_forward_single_filter(self):
         input = np.array([[[ 1.,  1.,  0.],
                            [ 2.,  2.,  0.],
