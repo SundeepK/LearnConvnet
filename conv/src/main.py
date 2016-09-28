@@ -1,4 +1,4 @@
-from matrix import Matrix
+from convmatrix import ConvMatrix
 
-matrix = Matrix(1, 2, 2)
-print(matrix.m)
+matrix = ConvMatrix(1, 2, 2)
+print(matrix.params)

@@ -1,5 +1,5 @@
 import numpy
-from matrix import Matrix
+from convmatrix import ConvMatrix
 import math
 
 class PoolLayer(object):

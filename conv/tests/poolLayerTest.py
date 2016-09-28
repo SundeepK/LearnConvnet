@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from matrix import Matrix
+from convmatrix import ConvMatrix
 from poolLayer import PoolLayer
 import timeit
 import time

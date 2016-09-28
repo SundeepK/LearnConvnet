@@ -1,5 +1,5 @@
 import numpy
-from matrix import Matrix
+from convmatrix import ConvMatrix
 import math
 
 class SoftmaxLayer(object):
@@ -7,9 +7,10 @@ class SoftmaxLayer(object):
     def forward(self, inputs):
         self.inputs = inputs
         out_softmax = numpy.empty(len(inputs), dtype=object)
+        max = numpy.max(inputs)
         for f in range(0, len(inputs)):
             layer = inputs[f]
-            e_x = numpy.exp(layer - numpy.max(layer))
+            e_x = numpy.exp(layer - max)
             out_softmax[f] = e_x / e_x.sum()
         self.out = out_softmax
         return out_softmax
