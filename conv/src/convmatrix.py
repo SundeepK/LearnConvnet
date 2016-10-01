@@ -10,17 +10,17 @@ class ConvMatrix(object):
         self.d = d
         if matrix is None:
             sigma = sqrt(1.0/(x*y*d))
-            self.params = numpy.random.normal(0, sigma, (d, x, y))
+            self.params = numpy.random.normal(0, sigma, (d, y, x))
         else:
             self.params = matrix
         if grad_matrix is None:
-            self.grads = numpy.zeros((d, x, y))
+            self.grads = numpy.zeros((d, y, x))
         else:
             self.grads = grad_matrix
 
     @classmethod
     def with_matrix(cls, matrix):
-        obj = cls(matrix.shape[0], matrix.shape[1], matrix.shape[2], matrix)
+        obj = cls(matrix.shape[0], matrix.shape[2], matrix.shape[1], matrix, None)
         return obj
 
     def params(self):
