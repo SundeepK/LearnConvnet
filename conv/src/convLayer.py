@@ -82,7 +82,6 @@ class ConvLayer(object):
     def backward(self):
         input_matrix, offset_idx, all_indexes = self.input_data(self.input.params)
 
-
         # Get all actual indices & index into input array for final output
         out_filter_map = numpy.empty(len(self.filters), dtype=object)
         for f in range(0, len(self.filters)):
@@ -95,8 +94,11 @@ class ConvLayer(object):
             filter_reshaped_dw = numpy.repeat(self.filters[f].grad().reshape(f_z, 1, f_x * f_y),
                                            self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, input_matrix.shape[0], input_matrix.shape[1])
 
-            filter_dw = filter_reshaped_dw + (out_grad_tiled * input_matrix)
-            print(filter_dw)
+            filter_dw = (filter_reshaped_dw + (out_grad_tiled * input_matrix))
+
+            split_filter_dw = numpy.dsplit(filter_dw, f_z)
+            for index in range(0, len(split_filter_dw)):
+                self.filters[f].grads[index] = split_filter_dw[index].reshape(f_y * f_x, f_y * f_x).sum(axis=1).reshape(f_y, f_x)
 
             total = offset_idx.shape[0] * offset_idx.shape[1]
             sum = numpy.sum(filter_dw.reshape(input_matrix.shape[0], input_matrix.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
