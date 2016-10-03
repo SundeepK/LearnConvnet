@@ -100,16 +100,10 @@ class ConvLayer(object):
             for index in range(0, len(split_filter_dw)):
                 self.filters[f].grads[index] = split_filter_dw[index].reshape(f_y * f_x, f_y * f_x).sum(axis=1).reshape(f_y, f_x)
 
-            total = offset_idx.shape[0] * offset_idx.shape[1]
-            sum = numpy.sum(filter_dw.reshape(input_matrix.shape[0], input_matrix.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
-            if self.out_filter_map_x * self.out_filter_map_y == 1:
-                sum = numpy.sum(sum)
-            self.filters[f].grads = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
+            input_dw = (out_grad_tiled * filter_reshaped)
 
-            input_dw = input_matrix + (out_grad_tiled * filter_reshaped)
-
-            numpy.put(self.input.grads, all_indexes, input_dw)
-
+            for index in range(0, all_indexes.shape[1]):
+                numpy.put(self.input.grads, all_indexes[:, index], self.input.grads.take(all_indexes[:, index]) + input_dw.take((all_indexes[:, index])))
 
         self.out_filter_map = out_filter_map
         return out_filter_map
