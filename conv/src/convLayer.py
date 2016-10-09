@@ -101,40 +101,11 @@ class ConvLayer(object):
             for index in range(0, len(split_filter_dw)):
                 self.filters[f].grads[index] = split_filter_dw[index].reshape(f_y * f_x, f_y * f_x).sum(axis=1).reshape(f_y, f_x)
 
-            # input_dw = (out_grad_tiled * filter_reshaped).reshape(f_y * f_x, f_y * f_x * f_z)
-            # input_dw_split = numpy.hsplit(input_dw, f_z)
-            #
-            # for index in range(0, len(input_dw_split)):
-            #     input_dw_split[index] = input_dw_split[index].transpose()
-            #
-            #
-            # input_dw = numpy.concatenate(input_dw_split, axis=0)
             input_dw = (out_grad_tiled * filter_reshaped).reshape(f_y * f_x, f_y * f_x * f_z)
-            # input_dw = concatenate.reshape(f_z, f_y * f_x, f_y * f_x)
-            print(input_dw[:, 0])
-            # print(out_grad_tiled * filter_reshaped)
             for index in range(0, all_indexes.shape[1]):
-                if 1 <= index < all_indexes.shape[1]:
-                    grads = numpy.arange(f_x - 1, f_x * f_y, f_x)
-                    in_dws = numpy.arange(0, f_x * f_y, f_x)
-
-                    take_grad_index = all_indexes[:, index - 1].take(grads)
-                    grad_take = self.input.grads.take(take_grad_index)
-                    input_dw_take = input_dw[:, index].take(in_dws)
-
-                    accumilated = grad_take + input_dw_take
-                    print("take " + str(grads) + "grads indexes:" + str(take_grad_index) + " values at indexes: " + str(grad_take))
-                    print("take " + str(in_dws) + "in_dws indexes:" + str(in_dws) + " values at indexes: " + str(input_dw_take))
-                    print("accumilated: " + str(accumilated))
-                    print("\n")
-                    numpy.put(self.input.grads, all_indexes[:, index], input_dw[:, index])
-                    numpy.put(self.input.grads, take_grad_index, accumilated)
-                    print("self.input.grads: \n" + str(self.input.grads))
-                    print("\n")
-                elif index == 0:
-                    numpy.put(self.input.grads, all_indexes[:, index], input_dw[:, index])
-                    print("self.input.grads: \n" + str(self.input.grads))
-
+                current_grad = self.input.grads.take(all_indexes[:, index])
+                input_grad = input_dw[:, index]
+                numpy.put(self.input.grads, all_indexes[:, index], current_grad + input_grad)
 
         self.out_filter_map = out_filter_map
         return out_filter_map
