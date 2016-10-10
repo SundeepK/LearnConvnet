@@ -155,7 +155,7 @@ class ConvLayerTest(unittest.TestCase):
                                                       [0.4, 0.4, 0.4],
                                                       [0.3, 0.3, 0.3]]])
 
-        undertest.backward
+        undertest.backward()
 
         expected_input_grad = np.array([[
                                         [-0.5, 0, 0, 0, 0, 0, 0.5],

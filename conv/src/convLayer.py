@@ -23,8 +23,8 @@ class ConvLayer(object):
             self.filter_x = filter_x
             self.filter_y = filter_y
             self.filters = filters
-        self.out_filter_map_x = math.floor(((self.input_x - self.filter_x + (self.padding * 2))) / self.stride) + 1
-        self.out_filter_map_y = math.floor(((self.input_y - self.filter_y + (self.padding * 2))) / self.stride) + 1
+        self.out_filter_map_x = int(math.floor(((self.input_x - self.filter_x + (self.padding * 2))) / self.stride) + 1)
+        self.out_filter_map_y = int(math.floor(((self.input_y - self.filter_y + (self.padding * 2))) / self.stride) + 1)
 
     @classmethod
     def with_filters(cls, filters, input_x, input_y, stride, padding):
@@ -79,7 +79,6 @@ class ConvLayer(object):
         input_matrix = padded_input.take(all_indexes)
         return input_matrix, offset_idx, all_indexes
 
-    @property
     def backward(self):
         input_matrix, offset_idx, all_indexes = self.input_data(self.input.params)
 
