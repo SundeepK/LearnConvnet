@@ -4,10 +4,10 @@ from math import sqrt
 
 class ConvMatrix(object):
 
-    def __init__(self, d, x, y, matrix=None, grad_matrix=None):
-        self.x = x
-        self.y = y
+    def __init__(self, d, y, x, matrix=None, grad_matrix=None):
         self.d = d
+        self.y = y
+        self.x = x
         if matrix is None:
             sigma = sqrt(1.0/(x*y*d))
             self.params = numpy.random.normal(0, sigma, (d, y, x))
@@ -20,7 +20,7 @@ class ConvMatrix(object):
 
     @classmethod
     def with_matrix(cls, matrix):
-        obj = cls(matrix.shape[0], matrix.shape[2], matrix.shape[1], matrix, None)
+        obj = cls(matrix.shape[0], matrix.shape[1], matrix.shape[2], matrix, None)
         return obj
 
     def params(self):
