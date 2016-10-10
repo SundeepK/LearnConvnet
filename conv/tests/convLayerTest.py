@@ -34,7 +34,7 @@ class ConvLayerTest(unittest.TestCase):
         undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 3, 3, 1, 0)
         array = np.zeros((1, 1, 1))
         array[0, 0, 0] = -5
-        assert np.array_equiv(undertest.forward(input)[0].params, array)
+        assert np.array_equiv(undertest.forward(input).params, array)
 
     def test_vectorized_forward_multiple_filter_passes(self):
         input = np.array([[[ 0, 0, 1, 2, 1],
@@ -72,7 +72,7 @@ class ConvLayerTest(unittest.TestCase):
                                          [4, 4, 4],
                                          [3, 9, 5]]])
         start_time = timeit.default_timer()
-        assert np.array_equiv(undertest.forward(input)[0].params, expected_filter_map)
+        assert np.array_equiv(undertest.forward(input).params, expected_filter_map)
         print(timeit.default_timer() - start_time)
 
     def test_vectorized_forward_multiple_filter_passes_2(self):
@@ -111,7 +111,7 @@ class ConvLayerTest(unittest.TestCase):
                                          [3, 3, 4],
                                          [1, 6, 5]]])
         start_time = timeit.default_timer()
-        assert np.array_equiv(undertest.forward(input)[0].params, expected_filter_map)
+        assert np.array_equiv(undertest.forward(input).params, expected_filter_map)
         print(timeit.default_timer() - start_time)
 
     def test_it_performs_backprop_multiple_filter_passes(self):
@@ -150,8 +150,8 @@ class ConvLayerTest(unittest.TestCase):
                                          [4, 4, 4],
                                          [3, 9, 5]]])
 
-        assert np.array_equiv(undertest.forward(input)[0].params, expected_filter_map)
-        undertest.forward(input)[0].grad = np.array([[[0.5, 0.5, 0.5],
+        assert np.array_equiv(undertest.forward(input).params, expected_filter_map)
+        undertest.forward(input).grad = np.array([[[0.5, 0.5, 0.5],
                                                       [0.4, 0.4, 0.4],
                                                       [0.3, 0.3, 0.3]]])
 

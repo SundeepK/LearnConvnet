@@ -41,7 +41,7 @@ class ConvLayer(object):
         self.input_rolled_out, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
 
         # Get all actual indices & index into input array for final output
-        out_filter_map = numpy.empty(len(self.filters), dtype=object)
+        out_filter_map = ConvMatrix(self.depth, self.out_filter_map_x, self.out_filter_map_y, None, None)
         for f in range(0, len(self.filters)):
             f_z, f_y, f_x = self.filters[f].params.shape
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
@@ -54,9 +54,7 @@ class ConvLayer(object):
             sum = numpy.sum(filter_map.reshape(self.input_rolled_out.shape[0], self.input_rolled_out.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
-            out = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
-            o_z, o_y, o_x = out.shape
-            out_filter_map[f] = ConvMatrix(o_z, o_x, o_y, out)
+            out_filter_map.params[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
 
         self.out_filter_map = out_filter_map
         return out_filter_map
@@ -82,11 +80,10 @@ class ConvLayer(object):
 
     def backward(self):
         # Get all actual indices & index into input array for final output
-        out_filter_map = numpy.empty(len(self.filters), dtype=object)
         for f in range(0, len(self.filters)):
             f_z, f_y, f_x = self.filters[f].params.shape
             # gradient and filter will have same shape so just use it in calculations
-            out_grad_tiled = numpy.tile(self.out_filter_map[f].grad.reshape(1, f_x * f_y, 1), (f_x * f_y * f_z))
+            out_grad_tiled = numpy.tile(self.out_filter_map.grad[f].reshape(1, f_x * f_y, 1), (f_x * f_y * f_z))
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
                                            self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_rolled_out.shape[0], self.input_rolled_out.shape[1])
 
