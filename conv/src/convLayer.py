@@ -79,7 +79,6 @@ class ConvLayer(object):
         return input_matrix, offset_idx, all_indexes
 
     def backward(self):
-        # Get all actual indices & index into input array for final output
         for f in range(0, len(self.filters)):
             f_z, f_y, f_x = self.filters[f].params.shape
             # gradient and filter will have same shape so just use it in calculations
