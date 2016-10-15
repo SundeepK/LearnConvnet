@@ -185,10 +185,17 @@ class ConvLayerTest(unittest.TestCase):
         expected_filter_grad = np.array([[
                                         [0.5, 1,   0.5],
                                         [2.8, 2.4, 2.8],
-                                        [0.3, 0.6, 0.3]]])
-        np.testing.assert_array_almost_equal_nulp(undertest.get_params_and_grads().grads, expected_input_grad)
-        np.testing.assert_array_almost_equal_nulp(undertest.get_filters_and_grads()[0].grads[0], expected_filter_grad)
+                                        [0.3, 0.6, 0.3]],
 
+                                        [[2, 4, 2],
+                                        [3.2, 1.6, 3.2],
+                                        [1.2, 2.4, 1.2]],
+
+                                        [[2, 1.5, 2],
+                                        [1.6, 1.6, 1.6],
+                                        [1.2, 0.9, 1.2]]])
+        np.testing.assert_array_almost_equal_nulp(undertest.get_params_and_grads().grads, expected_input_grad)
+        np.testing.assert_array_almost_equal_nulp(undertest.get_filters_and_grads()[0].grads, expected_filter_grad)
 
 if __name__ == '__main__':
     unittest.main()
