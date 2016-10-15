@@ -1,5 +1,5 @@
 import numpy
-from convmatrix import ConvMatrix
+from convMatrix import ConvMatrix
 import math
 import scipy
 from scipy import signal
