@@ -38,20 +38,20 @@ class ConvLayer(object):
 
         p_z, p_y, p_x = padded_input.shape
         self.input_conv = ConvMatrix(p_z, p_x, p_y, padded_input)
-        self.selected_input_rolled_out_as_columns, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
+        self.input_2_col, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
 
         # Get all actual indices & index into input array for final output
         out_filter_map = ConvMatrix(self.depth, self.out_filter_map_x, self.out_filter_map_y, None, None)
         for f in range(0, len(self.filters)):
             f_z, f_y, f_x = self.filters[f].params.shape
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
-                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.selected_input_rolled_out_as_columns.shape[0], self.selected_input_rolled_out_as_columns.shape[1])
-            filter_map = self.selected_input_rolled_out_as_columns * filter_reshaped
+                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
+            filter_map = self.input_2_col * filter_reshaped
 
             # since examples are rolled next to each other we need to unroll then back to ndarray so that we can
             # sum across filters correctly
             total = offset_idx.shape[0] * offset_idx.shape[1]
-            sum = numpy.sum(filter_map.reshape(self.selected_input_rolled_out_as_columns.shape[0], self.selected_input_rolled_out_as_columns.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
+            sum = numpy.sum(filter_map.reshape(self.input_2_col.shape[0], self.input_2_col.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
             out_filter_map.params[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
@@ -84,14 +84,14 @@ class ConvLayer(object):
             # gradient and filter will have same shape so just use it in calculations
             out_grad_tiled = numpy.tile(self.out_filter_map.grad[f].reshape(1, f_x * f_y, 1), (f_x * f_y * f_z))
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
-                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.selected_input_rolled_out_as_columns.shape[0], self.selected_input_rolled_out_as_columns.shape[1])
+                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
 
-            filter_reshaped_dw = numpy.repeat(self.filters[f].grad().reshape(f_z, 1, f_x * f_y),
-                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.selected_input_rolled_out_as_columns.shape[0], self.selected_input_rolled_out_as_columns.shape[1])
+            filter_grad_repeated = numpy.repeat(self.filters[f].grad().reshape(f_z, 1, f_x * f_y),
+                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
 
-            filter_dw = (filter_reshaped_dw + (out_grad_tiled * self.selected_input_rolled_out_as_columns))
+            filter_new_grad = (filter_grad_repeated + (out_grad_tiled * self.input_2_col))
 
-            split_filter_dw = numpy.dsplit(filter_dw, f_z)
+            split_filter_dw = numpy.dsplit(filter_new_grad, f_z)
             for index in range(0, len(split_filter_dw)):
                 self.filters[f].grads[index] = split_filter_dw[index].reshape(f_y * f_x, f_y * f_x).sum(axis=1).reshape(f_y, f_x)
 
