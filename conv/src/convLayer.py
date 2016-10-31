@@ -102,8 +102,8 @@ class ConvLayer(object):
                 numpy.put(self.input_conv.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
 
 
-    def get_params_and_grads(self):
+    def get_input_and_grad(self):
         return self.input_conv
 
-    def get_filters_and_grads(self):
+    def get_params_and_grads(self):
         return self.filters
