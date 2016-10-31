@@ -36,3 +36,9 @@ class FullyConnectedLayer(object):
             self.input[i].grad = (self.filters[i].params * dw)
             self.filters[i].grad = self.input[i].params * dw
             self.bias.grad = self.bias.params + dw
+
+    def get_input_and_grad(self):
+        return self.input
+
+    def get_params_and_grads(self):
+        return self.filters

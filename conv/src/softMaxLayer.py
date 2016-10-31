@@ -28,3 +28,6 @@ class SoftmaxLayer(object):
         else:
             self.backward(y)
             return -(numpy.log(self.out))
+
+    def get_params_and_grads(self):
+        return []

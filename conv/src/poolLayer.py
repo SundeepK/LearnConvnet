@@ -29,3 +29,6 @@ class PoolLayer(object):
             pooled_out[f] = pooled_values.reshape(out_x, out_y)
 
         return pooled_out
+
+    def get_params_and_grads(self):
+        return []
