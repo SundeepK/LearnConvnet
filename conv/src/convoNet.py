@@ -24,4 +24,4 @@ class ConvNet(object):
         params_grads = []
         for l in range(0, len(self.layers)):
             params_grads = params_grads + self.layers[l].get_params_and_grads()
-
+        return params_grads
