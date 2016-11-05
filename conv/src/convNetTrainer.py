@@ -2,6 +2,8 @@ import numpy
 from convMatrix import ConvMatrix
 import math
 from convoNet import ConvNet
+from trainResult import TrainingResult
+import timeit
 
 class ConvNetTrainer(object):
 
@@ -17,8 +19,11 @@ class ConvNetTrainer(object):
 
     def train(self, x, y):
         l2_decay_loss = 0
+        forward_time = timeit.default_timer()
         self.convNet.forward(x)
-        self.convNet.backward(y)
+        forward_time = timeit.default_timer() - forward_time
+        cost_loss = self.convNet.backward(y)
+        backwards_time = timeit.default_timer() - forward_time
         self.k += 1
 
         if self.k % self.batch_size == 0:
@@ -41,3 +46,5 @@ class ConvNetTrainer(object):
                 self.xsum[i] = self.ro * self.xsum[i] + (1 - self.ro) * dx * dx
                 params[i] += dx
                 grads.fill(0)
+
+        return TrainingResult(l2_decay_loss, cost_loss, cost_loss + l2_decay_loss, forward_time, backwards_time)
