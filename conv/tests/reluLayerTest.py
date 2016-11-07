@@ -32,7 +32,7 @@ class ReluLayerTest(unittest.TestCase):
                            [ 1.,  1.,  1.],
                            [ 1.,  1.,  1.]]])
 
-        undertest = ReluLayer(3, 3, 3)
+        undertest = ReluLayer()
         input = ConvMatrix(3, 3, 3, input_matrix, None)
         out = undertest.forward(input)
         assert np.array_equiv(out.params, expected)
