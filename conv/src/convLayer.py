@@ -6,25 +6,22 @@ from scipy import signal
 
 class ConvLayer(object):
 
-    def __init__(self, stride, padding, filter_x, filter_y, filter_d, d, filters=None):
+    def __init__(self, stride, padding, filter_x, filter_y, filter_d, filters=None):
         self.stride = stride
         self.padding = padding
+        self.filter_d = filter_d
         if filters is None:
             self.filters = []
-            self.depth = d
             self.filter_x = filter_x
             self.filter_y = filter_y
-            for i in range(0, d):
-                self.filters.append(ConvMatrix(filter_d, filter_x, filter_y))
         else:
-            self.depth = d
             self.filter_x = filter_x
             self.filter_y = filter_y
             self.filters = filters
 
     @classmethod
     def with_filters(cls, filters, stride, padding):
-        obj = cls(stride, padding, filters[0].x, filters[0].y, filters[0].d, len(filters), filters)
+        obj = cls(stride, padding, filters[0].x, filters[0].y, len(filters), filters)
         return obj
 
     def forward(self, input_matrix):
@@ -40,9 +37,11 @@ class ConvLayer(object):
         self.input_conv = ConvMatrix(p_z, p_x, p_y, padded_input)
         self.input_2_col, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
 
+        self.set_up_filters(i_z)
+
         # Get all actual indices & index into input array for final output
-        out_filter_map = ConvMatrix(self.depth, self.out_filter_map_x, self.out_filter_map_y, None, None)
-        for f in range(0, len(self.filters)):
+        out_filter_map = ConvMatrix(self.filter_d, self.out_filter_map_x, self.out_filter_map_y, None, None)
+        for f in range(0, self.filter_d):
             f_z, f_y, f_x = self.filters[f].params.shape
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
                                            self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
@@ -54,7 +53,7 @@ class ConvLayer(object):
             sum = numpy.sum(filter_map.reshape(self.input_2_col.shape[0], self.input_2_col.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
-            out_filter_map.params[f] = sum.reshape(self.depth, self.out_filter_map_x, self.out_filter_map_y)
+            out_filter_map.params[f] = sum.reshape(self.filter_d, self.out_filter_map_x, self.out_filter_map_y)
 
         self.out_filter_map = out_filter_map
         return out_filter_map
@@ -110,3 +109,8 @@ class ConvLayer(object):
 
     def out_shape(self):
         return len(self.filters), self.out_filter_map_y, self.out_filter_map_x
+
+    def set_up_filters(self, d):
+        if len(self.filters) <= 0:
+            for i in range(0, self.filter_d):
+                self.filters.append(ConvMatrix(d, self.filter_x, self.filter_y))
