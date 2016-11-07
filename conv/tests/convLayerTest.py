@@ -31,7 +31,7 @@ class ConvLayerTest(unittest.TestCase):
                            [[-1.,  0., -1.],
                             [ 1.,  1., -1.],
                             [ 0.,  1.,  1.]]])
-        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 3, 3, 1, 0)
+        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 1, 0)
         array = np.zeros((1, 1, 1))
         array[0, 0, 0] = -5
         assert np.array_equiv(undertest.forward(input).params, array)
@@ -67,7 +67,7 @@ class ConvLayerTest(unittest.TestCase):
                             [ 0, 1, -1],
                             [ -1, -1, -1]]])
 
-        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 5, 5, 2, 1)
+        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 2, 1)
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
                                          [3, 9, 5]]])
@@ -106,7 +106,7 @@ class ConvLayerTest(unittest.TestCase):
                             [ 0, 1],
                             [ -1, -1]]])
 
-        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 5, 5, 2, 1)
+        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 2, 1)
         expected_filter_map = np.array([[[2, -2, 1],
                                          [3, 3, 4],
                                          [1, 6, 5]]])
@@ -145,7 +145,7 @@ class ConvLayerTest(unittest.TestCase):
                             [ 0, 1, -1],
                             [ -1, -1, -1]]])
 
-        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 5, 5, 2, 1)
+        undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 2, 1)
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
                                          [3, 9, 5]]])

@@ -6,11 +6,9 @@ from scipy import signal
 
 class ConvLayer(object):
 
-    def __init__(self, inputX, inputY, stride, padding, filter_x, filter_y, filter_d, d, filters=None):
+    def __init__(self, stride, padding, filter_x, filter_y, filter_d, d, filters=None):
         self.stride = stride
         self.padding = padding
-        self.input_x = inputX
-        self.input_y = inputY
         if filters is None:
             self.filters = []
             self.depth = d
@@ -23,20 +21,22 @@ class ConvLayer(object):
             self.filter_x = filter_x
             self.filter_y = filter_y
             self.filters = filters
-        self.out_filter_map_x = int(math.floor((self.input_x - self.filter_x + (self.padding * 2)) / self.stride) + 1)
-        self.out_filter_map_y = int(math.floor((self.input_y - self.filter_y + (self.padding * 2)) / self.stride) + 1)
 
     @classmethod
-    def with_filters(cls, filters, input_x, input_y, stride, padding):
-        obj = cls(input_x, input_y, stride, padding, filters[0].x, filters[0].y, filters[0].d, len(filters), filters)
+    def with_filters(cls, filters, stride, padding):
+        obj = cls(stride, padding, filters[0].x, filters[0].y, filters[0].d, len(filters), filters)
         return obj
 
-    def forward(self, input_conv):
-        padded_input = numpy.pad(input_conv, pad_width=self.padding, mode='constant', constant_values=0)
-        if padded_input.shape[2] != input_conv.shape[2]:
+    def forward(self, input_matrix):
+        padded_input = numpy.pad(input_matrix, pad_width=self.padding, mode='constant', constant_values=0)
+        if padded_input.shape[2] != input_matrix.shape[2]:
             padded_input = padded_input[1:-1, :, :]
 
         p_z, p_y, p_x = padded_input.shape
+        i_z, i_y, i_x = input_matrix.shape
+        self.out_filter_map_x = int(math.floor((i_x - self.filter_x + (self.padding * 2)) / self.stride) + 1)
+        self.out_filter_map_y = int(math.floor((i_y - self.filter_y + (self.padding * 2)) / self.stride) + 1)
+
         self.input_conv = ConvMatrix(p_z, p_x, p_y, padded_input)
         self.input_2_col, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
 
@@ -107,3 +107,6 @@ class ConvLayer(object):
 
     def get_params_and_grads(self):
         return self.filters
+
+    def out_shape(self):
+        return len(self.filters), self.out_filter_map_y, self.out_filter_map_x
