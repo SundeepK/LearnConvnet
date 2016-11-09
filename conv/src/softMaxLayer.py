@@ -6,9 +6,9 @@ class SoftmaxLayer(object):
 
     def forward(self, inputs):
         self.inputs = inputs
-        out_softmax = numpy.empty(len(inputs), dtype=object)
-        max = numpy.max(inputs)
-        for f in range(0, len(inputs)):
+        out_softmax = numpy.empty(inputs.d, dtype=object)
+        max = numpy.max(inputs.params)
+        for f in range(0, inputs.d):
             layer = inputs[f]
             e_x = numpy.exp(layer - max)
             out_softmax[f] = e_x / e_x.sum()
@@ -16,7 +16,7 @@ class SoftmaxLayer(object):
         return out_softmax
 
     def backward(self, y):
-        dws = numpy.zeros(len(self.inputs))
+        dws = numpy.zeros(self.inputs.d)
         dws[y] = 1
         dws = -(dws - self.out)
         self.dws = dws
