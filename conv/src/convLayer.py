@@ -10,13 +10,11 @@ class ConvLayer(object):
         self.stride = stride
         self.padding = padding
         self.filter_d = filter_d
+        self.filter_x = filter_x
+        self.filter_y = filter_y
         if filters is None:
             self.filters = []
-            self.filter_x = filter_x
-            self.filter_y = filter_y
         else:
-            self.filter_x = filter_x
-            self.filter_y = filter_y
             self.filters = filters
 
     @classmethod
@@ -27,7 +25,7 @@ class ConvLayer(object):
     def forward(self, input_matrix):
         padded_input = numpy.pad(input_matrix.params, pad_width=self.padding, mode='constant', constant_values=0)
         if padded_input.shape[2] != input_matrix.params.shape[2]:
-            padded_input = padded_input[1:-1, :, :]
+            padded_input = padded_input[self.padding:-self.padding, :, :]
 
         p_z, p_y, p_x = padded_input.shape
         i_z, i_y, i_x = input_matrix.params.shape
