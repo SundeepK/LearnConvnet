@@ -51,7 +51,7 @@ class ConvLayer(object):
             sum = numpy.sum(filter_map.reshape(self.input_2_col.shape[0], self.input_2_col.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
-            out_filter_map.params[f] = sum.reshape(self.filter_d, self.out_filter_map_x, self.out_filter_map_y)
+            out_filter_map.params[f] = sum.reshape(1, self.out_filter_map_x, self.out_filter_map_y)
 
         self.out_filter_map = out_filter_map
         return out_filter_map
@@ -75,29 +75,28 @@ class ConvLayer(object):
         input_matrix = padded_input.take(all_indexes)
         return input_matrix, offset_idx, all_indexes
 
-    def backward(self):
+    def backwards(self, y):
         for f in range(0, len(self.filters)):
             f_z, f_y, f_x = self.filters[f].params.shape
             # gradient and filter will have same shape so just use it in calculations
-            out_grad_tiled = numpy.tile(self.out_filter_map.grad[f].reshape(1, f_x * f_y, 1), (f_x * f_y * f_z))
+            grad = self.out_filter_map.grad()[f]
+            g_y, g_x = grad.shape
+
+            p_z, p_y, p_x = self.input_conv.params.shape
+            out_grad_tiled = self.input_2_col * numpy.tile(grad.reshape(1, g_y * g_x), p_z)
+            out_grad_tiled = out_grad_tiled.reshape(p_z, self.input_2_col.shape[0], self.input_2_col.shape[1] / p_z)
+
+            for index in range(0, f_z):
+                self.filters[f].grads[index] = out_grad_tiled[index].sum(axis=1).reshape(f_y, f_x)
+
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
                                            self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
 
-            filter_grad_repeated = numpy.repeat(self.filters[f].grad().reshape(f_z, 1, f_x * f_y),
-                                           self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
-
-            filter_new_grad = (filter_grad_repeated + (out_grad_tiled * self.input_2_col))
-
-            split_filter_dw = numpy.dsplit(filter_new_grad, f_z)
-            for index in range(0, len(split_filter_dw)):
-                self.filters[f].grads[index] = split_filter_dw[index].reshape(f_y * f_x, f_y * f_x).sum(axis=1).reshape(f_y, f_x)
-
-            input_dw = (out_grad_tiled * filter_reshaped).reshape(f_y * f_x, f_y * f_x * f_z)
+            input_dw = (numpy.tile(grad.reshape(1, g_y * g_x), f_z) * filter_reshaped).reshape(f_y * f_x, self.input_rolled_out_indexes.shape[1])
             for index in range(0, self.input_rolled_out_indexes.shape[1]):
                 current_grad = self.input_conv.grads.take(self.input_rolled_out_indexes[:, index])
                 input_grad = input_dw[:, index]
                 numpy.put(self.input_conv.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
-
 
     def get_input_and_grad(self):
         return self.input_conv

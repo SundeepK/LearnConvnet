@@ -22,7 +22,7 @@ class ConvNetTrainer(object):
         forward_time = timeit.default_timer()
         self.convNet.forward(x)
         forward_time = timeit.default_timer() - forward_time
-        cost_loss = self.convNet.backward(y)
+        cost_loss = self.convNet.backwards(y)
         backwards_time = timeit.default_timer() - forward_time
         self.k += 1
 

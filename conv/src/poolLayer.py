@@ -30,5 +30,9 @@ class PoolLayer(object):
 
         return ConvMatrix(input_z, out_y, out_x, pooled_out)
 
+    def backwards(self, y):
+        pass
+
+
     def get_params_and_grads(self):
         return []

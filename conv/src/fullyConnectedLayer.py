@@ -30,7 +30,7 @@ class FullyConnectedLayer(object):
             self.out[i] = a + self.bias.params[i]
         return self.out
 
-    def backward(self):
+    def backwards(self):
         for i in range(0, len(self.filters)):
             dw = self.out[i]
             self.input[i].grad = (self.filters[i].params * dw)

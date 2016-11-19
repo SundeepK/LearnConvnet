@@ -11,7 +11,7 @@ class ReluLayer(object):
         self.out = ConvMatrix(self.input.d, self.input.y, self.input.x, self.input.params.clip(min=0), self.input.grad().copy())
         return self.out
 
-    def backwards(self):
+    def backwards(self, y):
         self.input.grad()[:] = self.out.grad()
         zero_indexes = numpy.where(self.out.params < 0)
         self.input.grad()[zero_indexes] = 0
