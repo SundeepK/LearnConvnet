@@ -39,10 +39,14 @@ convNet = ConvNet(layers)
 trainer = ConvNetTrainer(0.0001, 0.95, 0.0000001, 4, convNet)
 
 i = numpy.zeros((3, 32, 32))
-i[0] = x[5][:, :, 0]
-i[1] = x[5][:, :, 1]
-i[2] = x[5][:, :, 2]
+for index in range(0, 100):
+     print("Training no: " + str(index))
+     i[0] = x[index][:, :, 0]
+     i[1] = x[index][:, :, 1]
+     i[2] = x[index][:, :, 2]
 
-depth, y_input, x_input = i.shape
-stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y)
+     depth, y_input, x_input = i.shape
+     stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y)
+
+
 

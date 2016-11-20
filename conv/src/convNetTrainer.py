@@ -31,20 +31,21 @@ class ConvNetTrainer(object):
             if len(self.gsum) == 0:
                 for i in range(0, len(params_and_grads)):
                     pg = params_and_grads[i]
-                    self.xsum.append(ConvMatrix(pg.d, pg.y, pg.x, numpy.zeros((pg.d, pg.y, pg.x))))
-                    self.gsum.append(ConvMatrix(pg.d, pg.y, pg.x, numpy.zeros((pg.d, pg.y, pg.x))))
+                    self.xsum.append(numpy.zeros((pg.d, pg.y, pg.x)))
+                    self.gsum.append(numpy.zeros((pg.d, pg.y, pg.x)))
 
             for i in range(0, len(params_and_grads)):
                 pg = params_and_grads[i]
-                params = pg.params()
-                grads = pg.grads()
+                params = pg.params
+                grads = pg.grads
                 l2_decay_loss = numpy.sum(self.l2_decay * ((params * params) / 2))
                 l2_grad = self.l2_decay * params
                 g = (l2_grad + grads) / self.batch_size
-                self.gsum[i] = self.ro * self.gsum[i] + (1-self.ro) * g * g
-                dx = - math.sqrt((self.xsum[i] + self.eps)/(self.gsum[i] + self.eps)) * g
+                g_g = g * g
+                self.gsum[i] = self.ro * self.gsum[i] + (1 - self.ro) * g_g
+                dx = - numpy.sqrt((self.xsum[i] + self.eps)/(self.gsum[i] + self.eps)) * g
                 self.xsum[i] = self.ro * self.xsum[i] + (1 - self.ro) * dx * dx
-                params[i] += dx
+                pg.params = params + dx
                 grads.fill(0)
 
         return TrainingResult(l2_decay_loss, cost_loss, cost_loss + l2_decay_loss, forward_time, backwards_time)

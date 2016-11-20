@@ -15,3 +15,7 @@ class ReluLayer(object):
         self.input.grad()[:] = self.out.grad()
         zero_indexes = numpy.where(self.out.params < 0)
         self.input.grad()[zero_indexes] = 0
+
+    def get_params_and_grads(self):
+        return []
+
