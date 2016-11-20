@@ -23,12 +23,6 @@ class ConvMatrix(object):
         obj = cls(matrix.shape[0], matrix.shape[1], matrix.shape[2], matrix, None)
         return obj
 
-    def params(self):
-        return self.params
-
-    def grad(self):
-        return self.grads
-
     def x(self):
         return self.x
 
@@ -37,3 +31,9 @@ class ConvMatrix(object):
 
     def d(self):
         return self.d
+
+    def set_grad(self, g):
+        self.grads[:] = g
+
+    def set_params(self, p):
+        self.params[:] = p

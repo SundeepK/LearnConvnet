@@ -154,7 +154,7 @@ class ConvLayerTest(unittest.TestCase):
         new_grad = np.array([[[0.5, 0.5, 0.5],
                               [0.4, 0.4, 0.4],
                               [0.3, 0.3, 0.3]]])
-        np.put(undertest.forward(ConvMatrix(3, 5, 5, input)).grad(), [0, 1, 2, 3, 4, 5, 6, 7, 8], new_grad)
+        np.put(undertest.forward(ConvMatrix(3, 5, 5, input)).grads, [0, 1, 2, 3, 4, 5, 6, 7, 8], new_grad)
 
         undertest.backwards(1)
 

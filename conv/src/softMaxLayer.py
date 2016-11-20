@@ -13,7 +13,7 @@ class SoftmaxLayer(object):
             e_x = numpy.exp((layer - max).astype(float))
             out_softmax[f] = e_x / e_x.sum()
         self.out = out_softmax
-        print(out_softmax)
+        print(inputs.params)
         return out_softmax
 
     def backwards(self, y):

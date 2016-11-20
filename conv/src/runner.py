@@ -47,6 +47,7 @@ for index in range(0, 100):
 
      depth, y_input, x_input = i.shape
      stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y)
+     print(stats.cost_loss)
 
 
 

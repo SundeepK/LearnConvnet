@@ -79,7 +79,7 @@ class ConvLayer(object):
         for f in range(0, len(self.filters)):
             f_z, f_y, f_x = self.filters[f].params.shape
             # gradient and filter will have same shape so just use it in calculations
-            grad = self.out_filter_map.grad()[f]
+            grad = self.out_filter_map.grads[f]
             g_y, g_x = grad.shape
 
             p_z, p_y, p_x = self.input_conv.params.shape
