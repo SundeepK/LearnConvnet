@@ -23,7 +23,7 @@ class ConvLayer(object):
         return obj
 
     def forward(self, input_matrix):
-        padded_input = numpy.pad(input_matrix.params, pad_width=self.padding, mode='constant', constant_values=0)
+        padded_input = numpy.pad(input_matrix.params.astype(float), pad_width=self.padding, mode='constant', constant_values=0)
         if padded_input.shape[2] != input_matrix.params.shape[2]:
             padded_input = padded_input[self.padding:-self.padding, :, :]
 
@@ -110,4 +110,4 @@ class ConvLayer(object):
     def set_up_filters(self, d):
         if len(self.filters) <= 0:
             for i in range(0, self.filter_d):
-                self.filters.append(ConvMatrix(d, self.filter_x, self.filter_y))
+                self.filters.append(ConvMatrix(d, self.filter_y, self.filter_x))

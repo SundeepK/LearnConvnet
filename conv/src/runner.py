@@ -30,9 +30,10 @@ l4 = ConvLayer(1, 2, 5, 5, 20)
 l5 = PoolLayer(2, 2)
 l6 = ConvLayer(1, 2, 5, 5, 20)
 l7 = PoolLayer(2, 2)
-l8 = SoftmaxLayer()
+l8 = FullyConnectedLayer()
+l9 = SoftmaxLayer()
 
-layers = [l1, l2, l3, l8]
+layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9]
 
 convNet = ConvNet(layers)
 trainer = ConvNetTrainer(0.0001, 0.95, 0.0000001, 4, convNet)
@@ -44,5 +45,4 @@ i[2] = x[5][:, :, 2]
 
 depth, y_input, x_input = i.shape
 stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y)
-print(stats.cost_loss)
 
