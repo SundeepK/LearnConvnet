@@ -12,9 +12,10 @@ class ReluLayer(object):
         return self.out
 
     def backwards(self, y):
+        self.input.grads.fill(0)
         self.input.grads[:] = self.out.grads
         zero_indexes = numpy.where(self.out.params < 0)
-        self.input.grad()[zero_indexes] = 0
+        self.input.grads[zero_indexes] = 0
 
     def get_params_and_grads(self):
         return []
