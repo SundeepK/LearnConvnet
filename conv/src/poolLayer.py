@@ -23,22 +23,24 @@ class PoolLayer(object):
         # Get off-setted indices across the height and width of input array
         offset_idx = (numpy.arange(0, row_extent, self.stride)[:,None]*input_x + numpy.arange(0, col_extent, self.stride))
         all_indexes = (start_idx.ravel()[:, None] + offset_idx.ravel())
-        pooled_out = numpy.empty((input_z, out_y, out_x))
-        self.pooled_out_max_indices = numpy.empty((input_z, out_y, out_x))
+        pooled_out = numpy.empty((int(input_z), int(out_y), int(out_x)))
+        self.pooled_out_max_indices = numpy.empty((int(input_z), int(out_y), int(out_x)), dtype=int)
         for f in range(0, input_z):
             filter_map = input_matrix.params[f]
             selected_vales = filter_map.take(all_indexes)
             pooled_values = numpy.amax(selected_vales, axis=0)
-            pooled_out[f] = pooled_values.reshape(out_x, out_y)
-            self.pooled_out_max_indices[f] = numpy.diagonal(numpy.take(all_indexes, numpy.argmax(selected_vales, axis=0), axis=0)).reshape(out_x, out_y)
+            pooled_out[f] = pooled_values.reshape(int(out_x), int(out_y))
+            # store indexes of max values from input
+            self.pooled_out_max_indices[f] = numpy.diagonal(numpy.take(all_indexes, numpy.argmax(selected_vales, axis=0), axis=0)).reshape(int(out_x), int(out_y))
 
         self.out = ConvMatrix(input_z, out_y, out_x, pooled_out)
         return self.out
 
     def backwards(self, y):
+        self.input.grads.fill(0)
         out_z, out_y, out_x = self.pooled_out_max_indices.shape
         for f in range(0, out_z):
-            chained = numpy.take(self.input.grads[f], self.pooled_out_max_indices[f]).reshape(out_y, out_x) + self.out.grads[f]
+            chained = numpy.take(self.input.params[f], self.pooled_out_max_indices[f]).reshape(int(out_y), int(out_x)) + self.out.grads[f]
             numpy.put(self.input.grads[f], self.pooled_out_max_indices[f], chained)
 
 
