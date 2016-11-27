@@ -25,16 +25,16 @@ class FullyConnectedLayer(object):
         for i in range(0, self.depth):
             a = numpy.sum(input.params * self.filters[i].params)
             out[i] = a + self.bias.params[i]
-        self.out = ConvMatrix(1, 1, self.depth, out)
+        self.out = ConvMatrix(1, 1, self.depth, out, numpy.zeros(int(self.depth)))
         return self.out
 
     def backwards(self, y):
-        self.input.grad().fill(0)
+        self.input.grads.fill(0)
         for i in range(0, self.depth):
             dw = self.out.grads[i]
-            self.input.grad = self.input.grad + (self.filters[i].params * dw)
-            self.filters[i].grad = self.filters[i].grad + (self.input.params * dw)
-            self.bias.grad = self.bias.params + dw
+            self.input.grads = self.input.grads + (self.filters[i].params * dw)
+            self.filters[i].grads = self.filters[i].grads + (self.input.params * dw)
+            self.bias.grads = self.bias.params + dw
 
     def get_input_and_grad(self):
         return self.input
