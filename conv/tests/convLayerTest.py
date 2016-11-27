@@ -145,16 +145,18 @@ class ConvLayerTest(unittest.TestCase):
                             [ 0, 1, -1],
                             [ -1, -1, -1]]])
 
+
         undertest = ConvLayer.with_filters([ConvMatrix.with_matrix(filter)], 2, 1)
         expected_filter_map = np.array([[[0, -5, 1],
                                          [4, 4, 4],
                                          [3, 9, 5]]])
 
-        assert np.array_equiv(undertest.forward(ConvMatrix(3, 5, 5, input)).params, expected_filter_map)
+        out_result = undertest.forward(ConvMatrix(3, 5, 5, input))
+        assert np.array_equiv(out_result.params, expected_filter_map)
         new_grad = np.array([[[0.5, 0.5, 0.5],
                               [0.4, 0.4, 0.4],
                               [0.3, 0.3, 0.3]]])
-        np.put(undertest.forward(ConvMatrix(3, 5, 5, input)).grads, [0, 1, 2, 3, 4, 5, 6, 7, 8], new_grad)
+        out_result.grads[:] = new_grad
 
         undertest.backwards(1)
 
@@ -196,9 +198,7 @@ class ConvLayerTest(unittest.TestCase):
                                         [1.6, 1.6, 1.6],
                                         [1.2, 0.9, 1.2]]])
         grads = undertest.get_input_and_grad().grads
-        print(grads[0])
-        print("\n")
-        print(expected_input_grad[0])
+
         np.testing.assert_array_almost_equal_nulp(grads, expected_input_grad)
         np.testing.assert_array_almost_equal_nulp(undertest.get_params_and_grads()[0].grads, expected_filter_grad)
 

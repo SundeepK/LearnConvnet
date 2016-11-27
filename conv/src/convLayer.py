@@ -77,14 +77,14 @@ class ConvLayer(object):
 
     def backwards(self, y):
         for f in range(0, len(self.filters)):
+            self.input_conv.grads.fill(0)
             f_z, f_y, f_x = self.filters[f].params.shape
-            # gradient and filter will have same shape so just use it in calculations
             grad = self.out_filter_map.grads[f]
             g_y, g_x = grad.shape
 
             p_z, p_y, p_x = self.input_conv.params.shape
             out_grad_tiled = self.input_2_col * numpy.tile(grad.reshape(1, g_y * g_x), p_z)
-            out_grad_tiled = out_grad_tiled.reshape(p_z, self.input_2_col.shape[0], self.input_2_col.shape[1] / p_z)
+            out_grad_tiled = numpy.hsplit(out_grad_tiled, p_z)
 
             for index in range(0, f_z):
                 self.filters[f].grads[index] = out_grad_tiled[index].sum(axis=1).reshape(f_y, f_x)
