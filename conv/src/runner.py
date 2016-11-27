@@ -21,33 +21,42 @@ def load_CIFAR_batch(filename):
         Y = numpy.array(Y)
         return X, Y
 
-x, y = load_CIFAR_batch("../cifar10/data_batch_1")
+def run(trainer, batch):
+     x, y = load_CIFAR_batch(batch)
+     i = numpy.zeros((3, 32, 32))
+     for index in range(0, 3000):
+          print("Training no: " + str(index) + " batch: " + batch)
+          i[0] = x[index][:, :, 0]
+          i[1] = x[index][:, :, 1]
+          i[2] = x[index][:, :, 2]
+          i = i /255.0-0.5
+          depth, y_input, x_input = i.shape
+          stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y[index])
+          # print(stats.cost_loss)
+
 
 l1 = ConvLayer(1, 2, 5, 5, 16)
 l2 = ReluLayer()
 l3 = PoolLayer(2, 2)
 l4 = ConvLayer(1, 2, 5, 5, 20)
-l5 = PoolLayer(2, 2)
-l6 = ConvLayer(1, 2, 5, 5, 20)
-l7 = PoolLayer(2, 2)
-l8 = FullyConnectedLayer()
-l9 = SoftmaxLayer()
+l5 = ReluLayer()
+l6 = PoolLayer(2, 2)
+l7 = ConvLayer(1, 2, 5, 5, 20)
+l8 = ReluLayer()
+l9 = PoolLayer(2, 2)
+l10 = FullyConnectedLayer()
+l11 = SoftmaxLayer()
 
-layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9]
+layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11]
 
 convNet = ConvNet(layers)
-trainer = ConvNetTrainer(0.0001, 0.95, 0.0000001, 4, convNet)
+trainer = ConvNetTrainer(0.0001, 0.95, 0.00000001, 4, convNet)
 
-i = numpy.zeros((3, 32, 32))
-for index in range(0, 100):
-     print("Training no: " + str(index))
-     i[0] = x[index][:, :, 0]
-     i[1] = x[index][:, :, 1]
-     i[2] = x[index][:, :, 2]
-
-     depth, y_input, x_input = i.shape
-     stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y)
-     print(stats.cost_loss)
+run(trainer, "../cifar10/data_batch_1")
+# run(trainer, "../cifar10/data_batch_2")
+# run(trainer, "../cifar10/data_batch_3")
+# run(trainer, "../cifar10/data_batch_4")
+# run(trainer, "../cifar10/data_batch_5")
 
 
 
