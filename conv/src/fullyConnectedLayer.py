@@ -32,9 +32,9 @@ class FullyConnectedLayer(object):
         self.input.grads.fill(0)
         for i in range(0, self.depth):
             dw = self.out.grads[i]
-            self.input.grads = self.input.grads + (self.filters[i].params * dw)
-            self.filters[i].grads = self.filters[i].grads + (self.input.params * dw)
-            self.bias.grads = self.bias.params + dw
+            self.input.grads[:] = self.input.grads + (self.filters[i].params * dw)
+            self.filters[i].grads[:] = self.filters[i].grads + (self.input.params * dw)
+            self.bias.grads[:] = self.bias.params + dw
 
     def get_input_and_grad(self):
         return self.input
