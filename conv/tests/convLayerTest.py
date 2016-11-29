@@ -199,6 +199,8 @@ class ConvLayerTest(unittest.TestCase):
                                         [1.2, 0.9, 1.2]]])
         grads = undertest.get_input_and_grad().grads
 
+        print(grads)
+
         np.testing.assert_array_almost_equal_nulp(grads, expected_input_grad)
         np.testing.assert_array_almost_equal_nulp(undertest.get_params_and_grads()[0].grads, expected_filter_grad)
 

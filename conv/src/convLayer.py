@@ -16,6 +16,9 @@ class ConvLayer(object):
             self.filters = []
         else:
             self.filters = filters
+        bias = numpy.zeros(self.filter_d)
+        bias.fill(0.1)
+        self.bias = ConvMatrix(self.filter_d, 1, 1, bias.copy(), bias.copy())
 
     @classmethod
     def with_filters(cls, filters, stride, padding):
@@ -51,7 +54,7 @@ class ConvLayer(object):
             sum = numpy.sum(filter_map.reshape(self.input_2_col.shape[0], self.input_2_col.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
-            out_filter_map.params[f] = sum.reshape(1, self.out_filter_map_x, self.out_filter_map_y)
+            out_filter_map.params[f] = sum.reshape(1, self.out_filter_map_x, self.out_filter_map_y) + self.bias.params[f]
 
         self.out_filter_map = out_filter_map
         return out_filter_map
@@ -75,6 +78,30 @@ class ConvLayer(object):
         input_matrix = padded_input.take(all_indexes)
         return input_matrix, offset_idx, all_indexes
 
+    def backwards_2(self, y):
+        padded_input = numpy.pad(input, pad_width=self.padding, mode='constant', constant_values=0)
+        if padded_input.shape[2] != input.shape[2]:
+            padded_input = padded_input[self.padding:-self.padding, :, :]
+        out_filter_map = numpy.zeros((self.filter_d, self.out_filter_map_x, self.out_filter_map_y))
+        padded_x = padded_input.shape[1]
+        padded_y = padded_input.shape[2]
+        for f in range(0, len(self.filters)):
+            map_y = 0
+            for y in range(0, padded_y, self.stride):
+                if y + self.filter_y > padded_y:
+                    break
+                map_x = 0
+                for x in range(0, padded_x, self.stride):
+                    current_stride_sum = 0
+                    if x + self.filter_x > padded_x:
+                        break
+                    for d in range(0, self.filters[f].m.shape[2]):
+                        current_stride_sum += numpy.sum(padded_input[d, y:(y + self.filter_y), x:(x + self.filter_x)] * self.filters[f].m[d, :, :])
+                    out_filter_map.m[f, map_y, map_x] = current_stride_sum
+                    map_x += 1
+                map_y += 1
+        return out_filter_map
+
     def backwards(self, y):
         for f in range(0, len(self.filters)):
             self.input_conv.grads.fill(0)
@@ -97,12 +124,17 @@ class ConvLayer(object):
                 current_grad = self.input_conv.grads.take(self.input_rolled_out_indexes[:, index])
                 input_grad = input_dw[:, index]
                 numpy.put(self.input_conv.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
+            self.bias.grads[f] = grad.sum() + self.bias.grads[f]
+
 
     def get_input_and_grad(self):
         return self.input_conv
 
     def get_params_and_grads(self):
         return self.filters
+
+    def get_bias_and_grads(self):
+        return [self.bias]
 
     def out_shape(self):
         return len(self.filters), self.out_filter_map_y, self.out_filter_map_x
