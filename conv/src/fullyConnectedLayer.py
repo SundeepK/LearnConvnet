@@ -13,7 +13,9 @@ class FullyConnectedLayer(object):
         else:
             self.filters = filters
         if bias is None:
-            self.bias = ConvMatrix(1, 1, self.depth, numpy.empty(self.depth))
+            bias = numpy.zeros(self.depth)
+            bias.fill(0.1)
+            self.bias = ConvMatrix(self.depth, 1, 1, bias.copy(), bias.copy())
         else:
             self.bias = bias
 
@@ -34,13 +36,16 @@ class FullyConnectedLayer(object):
             dw = self.out.grads[i]
             self.input.grads[:] = self.input.grads + (self.filters[i].params * dw)
             self.filters[i].grads[:] = self.filters[i].grads + (self.input.params * dw)
-            self.bias.grads[:] = self.bias.params + dw
+            self.bias.grads[:] = self.bias.grads + dw
 
     def get_input_and_grad(self):
         return self.input
 
     def get_params_and_grads(self):
         return self.filters
+
+    def get_bias_and_grads(self):
+        return [self.bias]
 
     def set_up_filters(self, z, y, x):
         if len(self.filters) <= 0:
