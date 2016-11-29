@@ -30,17 +30,17 @@ class ConvNetTrainer(object):
             params_and_grads = self.convNet.get_params_and_grads()
             if len(self.gsum) == 0:
                 for i in range(0, len(params_and_grads)):
-                    pd, py, px = params_and_grads[i].params.shape
-                    self.xsum.append(numpy.zeros((pd, py, px)))
-                    self.gsum.append(numpy.zeros((pd, py, px)))
+                    arr = params_and_grads[i].params.copy()
+                    arr.fill(0)
+                    self.xsum.append(arr)
+                    self.gsum.append(arr.copy())
 
             for i in range(0, len(params_and_grads)):
                 params = params_and_grads[i].params
                 l2_decay_loss = numpy.sum(self.l2_decay * ((params * params) / 2))
                 l2_grad = self.l2_decay * params
                 g = (l2_grad + params_and_grads[i].grads) / self.batch_size
-                g_g = g * g
-                self.gsum[i] = self.ro * self.gsum[i] + (1 - self.ro) * g_g
+                self.gsum[i] = self.ro * self.gsum[i] + (1 - self.ro) * g * g
                 dx = - numpy.sqrt((self.xsum[i] + self.eps)/(self.gsum[i] + self.eps)) * g
                 self.xsum[i] = self.ro * self.xsum[i] + (1 - self.ro) * dx * dx
                 params_and_grads[i].params[:] = params + dx
