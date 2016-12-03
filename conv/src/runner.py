@@ -8,6 +8,7 @@ from fullyConnectedLayer import FullyConnectedLayer
 from poolLayer import PoolLayer
 from softMaxLayer import SoftmaxLayer
 from reluLayer import ReluLayer
+from inputLayer import InputLayer
 import os
 from scipy.misc import toimage
 import pickle
@@ -31,30 +32,30 @@ def run(trainer, batch):
           i[2] = x[index][:, :, 2]
           i = i /255.0-0.5
           depth, y_input, x_input = i.shape
-          stats = trainer.train(ConvMatrix(depth, y_input, x_input, i), y[index])
+          stats = trainer.train(ConvMatrix(depth, y_input, x_input, i.copy()), y[index])
           # print(stats.cost_loss)
 
+l1 = InputLayer()
+l2 = ConvLayer(1, 2, 5, 5, 16)
+l3 = ReluLayer()
+l4 = PoolLayer(2, 2)
+l5 = ConvLayer(1, 2, 5, 5, 20)
+l6 = ReluLayer()
+l7 = PoolLayer(2, 2)
+l8 = ConvLayer(1, 2, 5, 5, 20)
+l9 = ReluLayer()
+l10 = PoolLayer(2, 2)
+l11 = FullyConnectedLayer()
+l12 = SoftmaxLayer()
 
-l1 = ConvLayer(1, 2, 5, 5, 16)
-l2 = ReluLayer()
-l3 = PoolLayer(2, 2)
-l4 = ConvLayer(1, 2, 5, 5, 20)
-l5 = ReluLayer()
-l6 = PoolLayer(2, 2)
-l7 = ConvLayer(1, 2, 5, 5, 20)
-l8 = ReluLayer()
-l9 = PoolLayer(2, 2)
-l10 = FullyConnectedLayer()
-l11 = SoftmaxLayer()
-
-layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11]
+layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12]
 
 convNet = ConvNet(layers)
 trainer = ConvNetTrainer(0.0001, 0.95, 0.00000001, 4, convNet)
 
 run(trainer, "../cifar10/data_batch_1")
-# run(trainer, "../cifar10/data_batch_2")
-# run(trainer, "../cifar10/data_batch_3")
+run(trainer, "../cifar10/data_batch_2")
+run(trainer, "../cifar10/data_batch_3")
 # run(trainer, "../cifar10/data_batch_4")
 # run(trainer, "../cifar10/data_batch_5")
 

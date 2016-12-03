@@ -6,7 +6,7 @@ from scipy import signal
 
 class ConvLayer(object):
 
-    def __init__(self, stride, padding, filter_x, filter_y, filter_d, filters=None):
+    def __init__(self, stride, padding, filter_x, filter_y, filter_d, filters=None, bias=None):
         self.stride = stride
         self.padding = padding
         self.filter_d = filter_d
@@ -17,7 +17,8 @@ class ConvLayer(object):
         else:
             self.filters = filters
         bias = numpy.zeros(self.filter_d)
-        bias.fill(0.1)
+        if bias is None:
+            bias.fill(0.1)
         self.bias = ConvMatrix(self.filter_d, 1, 1, bias.copy(), bias.copy())
 
     @classmethod
@@ -35,7 +36,10 @@ class ConvLayer(object):
         self.out_filter_map_x = int(math.floor((i_x - self.filter_x + (self.padding * 2)) / self.stride) + 1)
         self.out_filter_map_y = int(math.floor((i_y - self.filter_y + (self.padding * 2)) / self.stride) + 1)
 
-        self.input_conv = ConvMatrix(p_z, p_x, p_y, padded_input)
+        grad = padded_input.copy()
+        grad.fill(0)
+        self.input_conv = input_matrix
+        self.input_conv_padded = ConvMatrix(p_z, p_x + self.padding, p_y+ self.padding, padded_input, grad)
         self.input_2_col, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
 
         self.set_up_filters(i_z)
@@ -78,39 +82,16 @@ class ConvLayer(object):
         input_matrix = padded_input.take(all_indexes)
         return input_matrix, offset_idx, all_indexes
 
-    def backwards_2(self, y):
-        padded_input = numpy.pad(input, pad_width=self.padding, mode='constant', constant_values=0)
-        if padded_input.shape[2] != input.shape[2]:
-            padded_input = padded_input[self.padding:-self.padding, :, :]
-        out_filter_map = numpy.zeros((self.filter_d, self.out_filter_map_x, self.out_filter_map_y))
-        padded_x = padded_input.shape[1]
-        padded_y = padded_input.shape[2]
-        for f in range(0, len(self.filters)):
-            map_y = 0
-            for y in range(0, padded_y, self.stride):
-                if y + self.filter_y > padded_y:
-                    break
-                map_x = 0
-                for x in range(0, padded_x, self.stride):
-                    current_stride_sum = 0
-                    if x + self.filter_x > padded_x:
-                        break
-                    for d in range(0, self.filters[f].m.shape[2]):
-                        current_stride_sum += numpy.sum(padded_input[d, y:(y + self.filter_y), x:(x + self.filter_x)] * self.filters[f].m[d, :, :])
-                    out_filter_map.m[f, map_y, map_x] = current_stride_sum
-                    map_x += 1
-                map_y += 1
-        return out_filter_map
-
     def backwards(self, y):
+        self.input_conv_padded.grads.fill(0)
         for f in range(0, len(self.filters)):
-            self.input_conv.grads.fill(0)
             f_z, f_y, f_x = self.filters[f].params.shape
             grad = self.out_filter_map.grads[f]
             g_y, g_x = grad.shape
 
-            p_z, p_y, p_x = self.input_conv.params.shape
-            out_grad_tiled = self.input_2_col * numpy.tile(grad.reshape(1, g_y * g_x), p_z)
+            p_z, p_y, p_x = self.input_conv_padded.params.shape
+            grad_tiled = numpy.tile(grad.reshape(1, g_y * g_x), p_z)
+            out_grad_tiled = self.input_2_col * grad_tiled
             out_grad_tiled = numpy.hsplit(out_grad_tiled, p_z)
 
             for index in range(0, f_z):
@@ -119,12 +100,13 @@ class ConvLayer(object):
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
                                            self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
 
-            input_dw = (numpy.tile(grad.reshape(1, g_y * g_x), f_z) * filter_reshaped).reshape(f_y * f_x, self.input_rolled_out_indexes.shape[1])
+            input_dw = (grad_tiled * filter_reshaped).reshape(f_y * f_x, self.input_rolled_out_indexes.shape[1])
             for index in range(0, self.input_rolled_out_indexes.shape[1]):
-                current_grad = self.input_conv.grads.take(self.input_rolled_out_indexes[:, index])
+                current_grad = self.input_conv_padded.grads.take(self.input_rolled_out_indexes[:, index])
                 input_grad = input_dw[:, index]
-                numpy.put(self.input_conv.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
+                numpy.put(self.input_conv_padded.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
             self.bias.grads[f] = grad.sum() + self.bias.grads[f]
+        self.input_conv.grads = self.input_conv_padded.grads[:, 1:-self.padding, 1:-self.padding]
 
 
     def get_input_and_grad(self):
