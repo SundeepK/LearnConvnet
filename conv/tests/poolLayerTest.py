@@ -46,12 +46,12 @@ class PoolLayerTest(unittest.TestCase):
 
         # then
         expected_input_after_back_prop = np.array([[[0, 0, 0, 0],
-                                                    [0, 8, 0, 10],
-                                                    [5, 0, 0, 0],
-                                                    [0, 0, 0, 6]],
+                                                    [0, 2, 0, 2],
+                                                    [2, 0, 0, 0],
+                                                    [0, 0, 0, 2]],
                                                    [[0, 0, 0, 0],
-                                                    [7, 0, 0, 10],
-                                                    [5, 0, 0, 0],
-                                                    [0, 0, 0, 6]]])
+                                                    [2, 0, 0, 2],
+                                                    [2, 0, 0, 0],
+                                                    [0, 0, 0, 2]]])
 
         assert np.array_equiv(input.grads, expected_input_after_back_prop)

@@ -40,7 +40,7 @@ class PoolLayer(object):
         self.input.grads.fill(0)
         out_z, out_y, out_x = self.pooled_out_max_indices.shape
         for f in range(0, out_z):
-            chained = numpy.take(self.input.params[f], self.pooled_out_max_indices[f]).reshape(int(out_y), int(out_x)) + self.out.grads[f]
+            chained = numpy.take(self.input.grads[f], self.pooled_out_max_indices[f]).reshape(int(out_y), int(out_x)) + self.out.grads[f]
             numpy.put(self.input.grads[f], self.pooled_out_max_indices[f], chained)
 
     def get_bias_and_grads(self):
