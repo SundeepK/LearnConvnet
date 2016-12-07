@@ -10,7 +10,7 @@ class ConvNet(object):
     def forward(self, input_conv_matrix):
         activation = self.layers[0].forward(input_conv_matrix)
         if len(self.layers) > 0:
-            for l in range(1, len(self.layers)):
+            for l in range(1, len(self.layers), 1):
                 activation = self.layers[l].forward(activation)
         return activation
 
@@ -18,7 +18,7 @@ class ConvNet(object):
         total_layers = len(self.layers)
         loss = self.layers[total_layers - 1].backwards(expected_y)
         if len(self.layers) > 0:
-            for l in range(total_layers - 2, 0):
+            for l in range(total_layers - 2, -1, -1):
                     self.layers[l].backwards(expected_y)
         return loss
 
