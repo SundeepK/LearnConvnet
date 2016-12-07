@@ -2,6 +2,7 @@ import numpy
 from convMatrix import ConvMatrix
 import math
 import scipy
+import numpyUtils
 from scipy import signal
 
 class ConvLayer(object):
@@ -41,7 +42,7 @@ class ConvLayer(object):
         grad.fill(0)
         self.input_conv = input_matrix
         self.input_conv_padded = ConvMatrix(p_z, p_x + self.padding, p_y+ self.padding, padded_input, grad)
-        self.input_2_col, offset_idx, self.input_rolled_out_indexes = self.im_2_col(padded_input)
+        self.input_2_col, offset_idx, self.input_rolled_out_indexes = numpyUtils.im_2_col(padded_input, self.filter_x, self.filter_y, self.stride)
 
         self.set_up_filters(i_z)
 
@@ -63,25 +64,6 @@ class ConvLayer(object):
 
         self.out_filter_map = out_filter_map
         return out_filter_map
-
-    def im_2_col(self, padded_input):
-        # flatten to single matrix
-        input_z, input_y, input_x = padded_input.shape
-        total_size_for_1_dimension = input_x * input_y
-        col_extent = input_x - self.filter_x + 1
-        row_extent = input_y - self.filter_y + 1
-        padded_input = padded_input.reshape(input_z * input_y, input_x)
-        # Parameters
-        input_y, input_x = padded_input.shape
-        # Get Starting block indices
-        start_idx = (numpy.arange(self.filter_y)[:, None] * input_x + numpy.arange(self.filter_x))
-
-        # Get off-setted indices across the height and width of input array
-        offset_idx = (numpy.arange(0, row_extent, self.stride)[:, None] * input_x + numpy.arange(0, col_extent, self.stride))
-        dimension_offsets = (numpy.arange(input_z).reshape(input_z, 1, 1) * (total_size_for_1_dimension))
-        all_indexes = numpy.hstack((start_idx.ravel()[:, None] + offset_idx.ravel()) + dimension_offsets)
-        input_matrix = padded_input.take(all_indexes)
-        return input_matrix, offset_idx, all_indexes
 
     def backwards(self, y):
         self.input_conv_padded.grads.fill(0)
