@@ -14,7 +14,7 @@ class ConvMatrix(object):
         else:
             self.params = matrix
         if grad_matrix is None:
-            self.grads = numpy.zeros((int(d), int(y), int(x)))
+            self.grads = numpy.zeros((int(d), int(y), int(x)), dtype=float)
         else:
             self.grads = grad_matrix
 

@@ -6,7 +6,7 @@ from scipy import signal
 
 class ConvLayer(object):
 
-    def __init__(self, stride, padding, filter_x, filter_y, filter_d, filters=None, bias=None):
+    def __init__(self, stride, padding, filter_x, filter_y, filter_d, name="", filters=None, bias=None):
         self.stride = stride
         self.padding = padding
         self.filter_d = filter_d
@@ -20,10 +20,11 @@ class ConvLayer(object):
         if bias is None:
             bias.fill(0.1)
         self.bias = ConvMatrix(self.filter_d, 1, 1, bias.copy(), bias.copy())
+        self.name = name
 
     @classmethod
     def with_filters(cls, filters, stride, padding):
-        obj = cls(stride, padding, filters[0].x, filters[0].y, len(filters), filters)
+        obj = cls(stride, padding, filters[0].x, filters[0].y, len(filters), "", filters)
         return obj
 
     def forward(self, input_matrix):
@@ -106,7 +107,7 @@ class ConvLayer(object):
                 input_grad = input_dw[:, index]
                 numpy.put(self.input_conv_padded.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
             self.bias.grads[f] = grad.sum() + self.bias.grads[f]
-        self.input_conv.grads = self.input_conv_padded.grads[:, 1:-self.padding, 1:-self.padding]
+        self.input_conv.grads[:] = self.input_conv_padded.grads[:, self.padding:-self.padding, self.padding:-self.padding]
 
 
     def get_input_and_grad(self):

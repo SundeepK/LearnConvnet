@@ -13,7 +13,7 @@ class FullyConnectedLayer(object):
         else:
             self.filters = filters
         if bias is None:
-            bias = numpy.zeros(self.depth)
+            bias = numpy.zeros(self.depth, dtype=float)
             bias.fill(0.1)
             self.bias = ConvMatrix(self.depth, 1, 1, bias.copy(), bias.copy())
         else:
@@ -27,7 +27,7 @@ class FullyConnectedLayer(object):
         for i in range(0, self.depth):
             a = numpy.sum(input.params * self.filters[i].params)
             out[i] = a + self.bias.params[i]
-        self.out = ConvMatrix(1, 1, self.depth, out, numpy.zeros(int(self.depth)))
+        self.out = ConvMatrix(1, 1, self.depth, out, numpy.zeros(int(self.depth), dtype=float))
         return self.out
 
     def backwards(self, y):
