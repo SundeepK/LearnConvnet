@@ -22,6 +22,12 @@ class ConvLayer(object):
             bias.fill(0.1)
         self.bias = ConvMatrix(self.filter_d, 1, 1, bias.copy(), bias.copy())
         self.name = name
+        self.input_2_col = None
+        self.input_conv_padded = None
+        self.im_2_col_indexes = None
+        self.out_filter_map_x = None
+        self.out_filter_map_y = None
+        self.input_conv = None
 
     @classmethod
     def with_filters(cls, filters, stride, padding):
@@ -29,22 +35,11 @@ class ConvLayer(object):
         return obj
 
     def forward(self, input_matrix):
-        padded_input = numpy.pad(input_matrix.params.astype(float), pad_width=self.padding, mode='constant', constant_values=0)
-        if padded_input.shape[2] != input_matrix.params.shape[2]:
-            padded_input = padded_input[self.padding:-self.padding, :, :]
-
-        p_z, p_y, p_x = padded_input.shape
-        i_z, i_y, i_x = input_matrix.params.shape
-        self.out_filter_map_x = int(math.floor((i_x - self.filter_x + (self.padding * 2)) / self.stride) + 1)
-        self.out_filter_map_y = int(math.floor((i_y - self.filter_y + (self.padding * 2)) / self.stride) + 1)
-
-        grad = padded_input.copy()
-        grad.fill(0)
+        self.input_conv_padded = self.get_padded_conv(numpyUtils.pad(input_matrix, self.padding))
         self.input_conv = input_matrix
-        self.input_conv_padded = ConvMatrix(p_z, p_x + self.padding, p_y+ self.padding, padded_input, grad)
-        self.input_2_col, offset_idx, self.input_rolled_out_indexes = numpyUtils.im_2_col(padded_input, self.filter_x, self.filter_y, self.stride)
-
-        self.set_up_filters(i_z)
+        self.setup_im_2_col(input_matrix.params, self.input_conv_padded.params)
+        self.set_up_filters(input_matrix.params.shape[0]) # pass in matrix depth or z
+        self.input_2_col = self.input_conv_padded.params.take(self.im_2_col_indexes)
 
         # Get all actual indices & index into input array for final output
         out_filter_map = ConvMatrix(self.filter_d, self.out_filter_map_x, self.out_filter_map_y, None, None)
@@ -56,7 +51,7 @@ class ConvLayer(object):
 
             # since examples are rolled next to each other we need to unroll then back to ndarray so that we can
             # sum across filters correctly
-            total = offset_idx.shape[0] * offset_idx.shape[1]
+            total = self.out_filter_map_x * self.out_filter_map_y
             sum = numpy.sum(filter_map.reshape(self.input_2_col.shape[0], self.input_2_col.shape[1]), axis=0).reshape(f_z, total).sum(axis=0)
             if self.out_filter_map_x * self.out_filter_map_y == 1:
                 sum = numpy.sum(sum)
@@ -83,14 +78,33 @@ class ConvLayer(object):
             filter_reshaped = numpy.repeat(self.filters[f].params.reshape(f_z, 1, f_x * f_y),
                                            self.out_filter_map_y * self.out_filter_map_y, 0).transpose().reshape(1, self.input_2_col.shape[0], self.input_2_col.shape[1])
 
-            input_dw = (grad_tiled * filter_reshaped).reshape(f_y * f_x, self.input_rolled_out_indexes.shape[1])
-            for index in range(0, self.input_rolled_out_indexes.shape[1]):
-                current_grad = self.input_conv_padded.grads.take(self.input_rolled_out_indexes[:, index])
+            input_dw = (grad_tiled * filter_reshaped).reshape(f_y * f_x, self.im_2_col_indexes.shape[1])
+            for index in range(0, self.im_2_col_indexes.shape[1]):
+                current_grad = self.input_conv_padded.grads.take(self.im_2_col_indexes[:, index])
                 input_grad = input_dw[:, index]
-                numpy.put(self.input_conv_padded.grads, self.input_rolled_out_indexes[:, index], current_grad + input_grad)
+                numpy.put(self.input_conv_padded.grads, self.im_2_col_indexes[:, index], current_grad + input_grad)
             self.bias.grads[f] = grad.sum() + self.bias.grads[f]
         self.input_conv.grads[:] = self.input_conv_padded.grads[:, self.padding:-self.padding, self.padding:-self.padding]
 
+    # only fetch filter indexes as columns if new input array
+    # im_2_col_indexes tells us the indexes of the elements the filter window encompasses
+    # therefore telling us which elements we need to fetch when multiplying with the filter
+    def setup_im_2_col(self, input_matrix, padded_input):
+        if self.im_2_col_indexes is None:
+            self.init_input_and_indexes(input_matrix, padded_input)
+
+    def init_input_and_indexes(self, input_matrix, padded_input):
+        i_z, i_y, i_x = input_matrix.shape
+        self.out_filter_map_x = int(math.floor((i_x - self.filter_x + (self.padding * 2)) / self.stride) + 1)
+        self.out_filter_map_y = int(math.floor((i_y - self.filter_y + (self.padding * 2)) / self.stride) + 1)
+        self.im_2_col_indexes = numpyUtils.im_2_col_indexes(padded_input, self.filter_x,
+                                                            self.filter_y, self.stride)
+
+    def get_padded_conv(self, padded_input):
+        p_z, p_y, p_x = padded_input.shape
+        grad = padded_input.copy()
+        grad.fill(0)
+        return ConvMatrix(p_z, p_x + self.padding, p_y + self.padding, padded_input, grad)
 
     def get_input_and_grad(self):
         return self.input_conv
