@@ -12,8 +12,8 @@
         ws.onopen = function(){
         };
         ws.onmessage = function(evt){
-            var imageWidth = 512, imageHeight = 512;
-            var blob = new Blob([(evt.data)], {type: 'image/png'});
+            var imageWidth = 32, imageHeight = 32;
+            var blob = new Blob([(evt.data)], {type: 'image/jpeg'});
             var url = (window.URL || window.webkitURL).createObjectURL(blob);
             var image = document.createElement('img');
             image.width = imageWidth;

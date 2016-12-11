@@ -20,7 +20,7 @@ class ConvNetTrainer(object):
     def train(self, x, y):
         l2_decay_loss = 0
         forward_time = timeit.default_timer()
-        self.convNet.forward(x)
+        activations = self.convNet.forward(x)
         forward_time = timeit.default_timer() - forward_time
         cost_loss = self.convNet.backwards(y)
         backwards_time = timeit.default_timer() - forward_time
@@ -46,4 +46,5 @@ class ConvNetTrainer(object):
                 params_and_grads[i].params[:] = params + dx
                 params_and_grads[i].grads.fill(0)
 
-        return TrainingResult(l2_decay_loss, cost_loss, cost_loss + l2_decay_loss, forward_time, backwards_time)
+        return TrainingResult(l2_decay_loss, cost_loss, cost_loss + l2_decay_loss,
+                              forward_time, backwards_time, activations)
