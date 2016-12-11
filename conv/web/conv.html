@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>tornado WebSocket example</title>
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script>
+        var img = document.getElementById("test");
+        var ws = new WebSocket('ws://localhost:8888/ws');
+        ws.binaryType = "arraybuffer";
+        var $message = $('#message');
+        ws.onopen = function(){
+        };
+        ws.onmessage = function(evt){
+            var imageWidth = 512, imageHeight = 512;
+            var blob = new Blob([(evt.data)], {type: 'image/png'});
+            var url = (window.URL || window.webkitURL).createObjectURL(blob);
+            var image = document.createElement('img');
+            image.width = imageWidth;
+            image.height = imageHeight;
+            image.src = url;
+            var div = document.getElementById('img');
+            div.appendChild(image);
+        };
+    </script>
+</head>
+<body>
+    <!--<canvas id="canvas"></canvas>-->
+    <div id="img"></div>
+</body>
+</html>
