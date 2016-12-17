@@ -47,4 +47,4 @@ class ConvNetTrainer(object):
                 params_and_grads[i].grads.fill(0)
 
         return TrainingResult(l2_decay_loss, cost_loss, cost_loss + l2_decay_loss,
-                              forward_time, backwards_time, activations)
+                              forward_time, backwards_time, activations.tolist())
