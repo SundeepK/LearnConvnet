@@ -1,3 +1,33 @@
+body {
+    padding-top: 70px;
+}
+
+.prediction {
+    margin: 3px auto;
+    background: #727fb5;
+    height: 80px;
+    width: 80px;
+}
+
+.predictions {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.graph {
+    width: 800px;
+    background: #222;
+}
+
+.content {
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 .container {
     width: 100%
 }
@@ -11,4 +41,9 @@
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     width: 100%;
     z-index: 100
+}
+
+.main {
+    width: 655px;
+    margin: auto;
 }
