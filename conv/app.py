@@ -64,7 +64,6 @@ app = tornado.web.Application([
 ], **settings)
 
 if __name__ == '__main__':
-    #TODO remove in prod
     tornado.autoreload.start()
     parse_command_line()
     if options.watch:
