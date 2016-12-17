@@ -1,0 +1,14 @@
+.container {
+    width: 100%
+}
+
+.navbar {
+    background: #222;
+    color: #fafafa;
+    position: fixed;
+    top: 0;
+    height: 50px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    z-index: 100
+}
