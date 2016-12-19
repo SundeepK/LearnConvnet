@@ -5,8 +5,8 @@ body {
 .prediction {
     margin: 3px auto;
     background: #727fb5;
-    height: 80px;
-    width: 80px;
+    height: 120px;
+    width: 120px;
 }
 
 .predictions {

@@ -1,13 +1,13 @@
 import React from "react"
 import Prediction from './Prediction';
 
-
+const classes = {0: 'airplane', 1:'automobile', 2:'bird', 3:'cat', 4:'deer', 5:'dog', 6:'frog', 7:'horse', 8:'ship', 9:'truck'};
 class Predictions extends React.Component{
 
     constructor(props) {
         super(props);
         let pred = [];
-        for (var i = 0; i < 253; i++) {
+        for (var i = 0; i < 256; i++) {
             pred[i] = {};
         }
         this.state = {
@@ -25,7 +25,21 @@ class Predictions extends React.Component{
 
     onMessage(evt){
         if (typeof evt.data === "string") {
-            console.log(evt.data)
+            let stats = JSON.parse(evt.data);
+            const predictions = this.state.predictions;
+            var maxAct = 0
+            var max = 0;
+            var secondMax = 0;
+            for (var i = 0; i < stats.activations.length; i++) {
+                if (stats.activations[i] > maxAct) {
+                    maxAct = stats.activations[i];
+                    secondMax = max;
+                    max = i;
+                }
+            }
+            predictions[0].stats = stats;
+            predictions[0].stats.class1 = classes[max];
+            predictions[0].stats.class2 = classes[secondMax];
         } else {
             var imageWidth = 32, imageHeight = 32;
             var blob = new Blob([(evt.data)], {type: 'image/jpeg'});
@@ -47,9 +61,16 @@ class Predictions extends React.Component{
     render() {
         let items = [];
         for (let i = this.state.predictions.length - 1; i > 0 ; i--) {
-            let img = this.state.predictions[i];
-            if (img.src) {
-                items[i] = <Prediction key={i} src={img.src} width={img.width} height={img.height}/>
+            let prediction = this.state.predictions[i];
+            if (prediction.src && prediction.stats) {
+                items[i] = <Prediction key={i}
+                                       src={prediction.src}
+                                       width={prediction.width}
+                                       height={prediction.height}
+                                       predictions={prediction.stats.activations}
+                                       class1={prediction.stats.class1}
+                                       class2={prediction.stats.class2}
+                />
             } else {
                 items[i] = <Prediction key={i} />
             }
