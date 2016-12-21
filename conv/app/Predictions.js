@@ -40,6 +40,8 @@ class Predictions extends React.Component{
             predictions[0].stats = stats;
             predictions[0].stats.class1 = classes[max];
             predictions[0].stats.class2 = classes[secondMax];
+            predictions[0].stats.class1Predication = (stats.activations[max] * 100).toFixed(2);
+            predictions[0].stats.class2Predication = (stats.activations[secondMax] * 100).toFixed(2) ;
         } else {
             var imageWidth = 32, imageHeight = 32;
             var blob = new Blob([(evt.data)], {type: 'image/jpeg'});
@@ -70,6 +72,8 @@ class Predictions extends React.Component{
                                        predictions={prediction.stats.activations}
                                        class1={prediction.stats.class1}
                                        class2={prediction.stats.class2}
+                                       class1Predication={prediction.stats.class1Predication}
+                                       class2Predication={prediction.stats.class2Predication}
                 />
             } else {
                 items[i] = <Prediction key={i} />

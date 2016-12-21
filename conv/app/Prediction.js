@@ -7,8 +7,8 @@ var Prediction = React.createClass({
             return (
                 <div className="prediction">
                     <img src={this.props.src} width={this.props.width} height={this.props.height}/>
-                    <div>{this.props.class1}</div>
-                    <div>{this.props.class2}</div>
+                    <div>{this.props.class1} {this.props.class1Predication}%</div>
+                    <div>{this.props.class2} {this.props.class2Predication}%</div>
                 </div>
             );
         } else {

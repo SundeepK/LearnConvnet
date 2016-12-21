@@ -2,23 +2,26 @@ import React, { Component } from 'react'
 import { Router, Route, Link, IndexRoute, hashHistory, browserHistory } from 'react-router'
 import Header from './Header';
 import Graph from './Graph';
+import Controls from './Controls';
 import Predictions from './Predictions';
-
 
 var MainLayout = React.createClass({
     render: function () {
         return (
             <div>
-                <div >
                     <Header/>
-                </div>
-                <div className="container">
-                    <div className="content">
-                        <Graph/><Graph/>
-                        {this.props.children}
+
+                    <div className="container-main">
+                        <div  className="controls">
+                            <Controls/>
+                        </div>
+                        <div className="content">
+                            <Graph/><Graph/>
+                            {/*{this.props.children}*/}
+                        </div>
+                        {/*<Predictions/>*/}
                     </div>
-                    <Predictions/>
-                </div>
+
             </div>
         );
     }

@@ -23,16 +23,33 @@ body {
 
 .content {
     margin: 0 auto;
-    width: 100%;
+    width: 80%;
     display: flex;
     justify-content: center;
+}
+
+.controls {
+    width: 80%;
 }
 
 .container {
     width: 100%
 }
 
+.container-main {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    flex-direction: column;
+}
+
+.Aligner-item--top {
+    align-self: flex-start;
+}
+
 .navbar {
+    align-self: flex-start;
+
     background: #222;
     color: #fafafa;
     position: fixed;
