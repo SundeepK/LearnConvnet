@@ -12,15 +12,19 @@
         ws.onopen = function(){
         };
         ws.onmessage = function(evt){
-            var imageWidth = 32, imageHeight = 32;
-            var blob = new Blob([(evt.data)], {type: 'image/jpeg'});
-            var url = (window.URL || window.webkitURL).createObjectURL(blob);
-            var image = document.createElement('img');
-            image.width = imageWidth;
-            image.height = imageHeight;
-            image.src = url;
-            var div = document.getElementById('img');
-            div.appendChild(image);
+            if (typeof evt.data === "string") {
+                console.log(evt.data)
+            } else {
+                var imageWidth = 32, imageHeight = 32;
+                var blob = new Blob([(evt.data)], {type: 'image/jpeg'});
+                var url = (window.URL || window.webkitURL).createObjectURL(blob);
+                var image = document.createElement('img');
+                image.width = imageWidth;
+                image.height = imageHeight;
+                image.src = url;
+                var div = document.getElementById('img');
+                div.appendChild(image);
+            }
         };
     </script>
 </head>
