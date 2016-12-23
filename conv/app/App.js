@@ -18,12 +18,14 @@ const classes = {
     9: 'truck'
 };
 
+const uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {let r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});
+
 class MainLayout extends React.Component {
 
     constructor(props) {
         super(props);
         let pred = [];
-        for (var i = 0; i < 256; i++) {
+        for (let i = 0; i < 256; i++) {
             pred[i] = {};
         }
         this.state = {
@@ -44,10 +46,10 @@ class MainLayout extends React.Component {
         if (typeof evt.data === "string") {
             let stats = JSON.parse(evt.data);
             const predictions = this.state.predictions;
-            var maxAct = 0;
-            var max = 0;
-            var secondMax = 0;
-            for (var i = 0; i < stats.activations.length; i++) {
+            let maxAct = 0;
+            let max = 0;
+            let secondMax = 0;
+            for (let i = 0; i < stats.activations.length; i++) {
                 if (stats.activations[i] > maxAct) {
                     maxAct = stats.activations[i];
                     secondMax = max;
@@ -60,10 +62,10 @@ class MainLayout extends React.Component {
             predictions[0].stats.class1Predication = (stats.activations[max] * 100).toFixed(2);
             predictions[0].stats.class2Predication = (stats.activations[secondMax] * 100).toFixed(2);
         } else {
-            var imageWidth = 32, imageHeight = 32;
-            var blob = new Blob([(evt.data)], {type: 'image/jpeg'});
-            var url = (window.URL || window.webkitURL).createObjectURL(blob);
-            var image = {};
+            let imageWidth = 32, imageHeight = 32;
+            let blob = new Blob([(evt.data)], {type: 'image/jpeg'});
+            let url = (window.URL || window.webkitURL).createObjectURL(blob);
+            let image = {};
             image.width = imageWidth;
             image.height = imageHeight;
             image.src = url;
@@ -78,15 +80,13 @@ class MainLayout extends React.Component {
     }
 
     pauseConvNet() {
-        console.log({canPause: false})
         this.setState({canPause: false});
-        this.ws.send(JSON.stringify({pause: true}))
+        this.ws.send(JSON.stringify({ pause: true, id: uid}))
     }
 
     startConvNet() {
-        console.log({canPause: true})
         this.setState({canPause: true});
-        this.ws.send(JSON.stringify({pause: false}))
+        this.ws.send(JSON.stringify({ pause: false, id: uid }))
     }
 
     render() {

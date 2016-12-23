@@ -10,12 +10,17 @@ from reluLayer import ReluLayer
 from inputLayer import InputLayer
 from scipy.misc import toimage
 import cifarUtils
+import time
+import threading
+import sys
 
 MAX_IMAGES_PER_BATCH = 3000
 
-class ConvNNRunner(object):
+
+class ConvNNRunner(threading.Thread):
 
     def __init__(self, training_hook):
+        threading.Thread.__init__(self)
         l1 = InputLayer()
         l2 = ConvLayer(1, 2, 5, 5, 16, "l8")
         l3 = ReluLayer()
@@ -32,36 +37,37 @@ class ConvNNRunner(object):
         self.convNet = ConvNet(self.layers)
         self.trainer = ConvNetTrainer(0.0001, 0.95, 0.00000001, 4, self.convNet)
         self.training_hook = training_hook
-        self.current_index = 0
-        self.current_batch_number = 0
-        self.batches = ["./cifar10/data_batch_1", 
+        self.batches = ["./cifar10/data_batch_1",
                         "../cifar10/data_batch_2",
                         "../cifar10/data_batch_3",
                         "../cifar10/data_batch_4",
                         "../cifar10/data_batch_5"]
-        self.paused = True
+        self.paused = False
+        self.pause_cond = threading.Condition(threading.Lock())
+
 
     def pause(self):
         self.paused = True
+        self.pause_cond.acquire()
+
 
     def resume(self):
         self.paused = False
-        self.start()
+        self.pause_cond.notify()
+        self.pause_cond.release()
 
-    def start(self):
-        for index in range(self.current_batch_number, len(self.batches)):
-            x, y = cifarUtils.load_CIFAR_batch(self.batches[index])
+    def run(self):
+        for batch in self.batches:
+            x, y = cifarUtils.load_CIFAR_batch(batch)
             img_ndarray = numpy.zeros((3, 32, 32))
-            for index in range(self.current_index, MAX_IMAGES_PER_BATCH):
-                if self.paused:
-                    return
+            for index in range(0, MAX_IMAGES_PER_BATCH):
+                # wait if paused
+                with self.pause_cond:
+                    if self.paused:
+                        self.pause_cond.wait()
                 self.setRGBChannels(img_ndarray, x[index])
                 img_ndarray = img_ndarray / 255.0-0.5
                 self.train(img_ndarray, y[index])
-                self.current_index += 1
-            self.current_batch_number += 1
-            self.current_index %= MAX_IMAGES_PER_BATCH
-
 
     def setRGBChannels(self, i, x):
             i[0] = x[:, :, 0]

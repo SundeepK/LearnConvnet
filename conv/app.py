@@ -29,16 +29,26 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def __init__(self, *args, **kwargs):
         super(WebSocketHandler, self).__init__(*args, **kwargs)
-        self.conv_runner = ConvNNRunner(self)
 
     def data_received(self, chunk):
         pass
 
     def open(self, *args):
-        self.conv_runner.start()
+        pass
 
     def on_message(self, message):
-        print "Client %s received a message : %s" % (self.id, message)
+        event = json.loads(message)
+        print(message)
+        if {'pause', 'id'} <= set(event):
+            if event['pause']:
+                clients[event['id']].pause()
+            else:
+                if event['id'] in clients:
+                    clients[event['id']].resume()
+                else:
+                    print("starting new thread")
+                    clients[event['id']] = ConvNNRunner(self)
+                    clients[event['id']].start()
 
     def on_close(self):
         pass
