@@ -24,14 +24,19 @@ class MainLayout extends React.Component {
 
     constructor(props) {
         super(props);
-        let pred = [];
-        for (let i = 0; i < 256; i++) {
-            pred[i] = {};
-        }
         this.state = {
             canPause: false,
-            predictions: pred
+            predictions: this.emptyObjectList()
         };
+        this.emptyObjectList = this.emptyObjectList.bind(this)
+    }
+
+    emptyObjectList(){
+        let arr = [];
+        for (let i = 0; i < 256; i++) {
+            arr[i] = {};
+        }
+        return arr;
     }
 
     componentDidMount() {
@@ -89,13 +94,20 @@ class MainLayout extends React.Component {
         this.ws.send(JSON.stringify({ pause: false, id: uid }))
     }
 
+    stopConvNet() {
+        this.setState({stop: true, canPause: false, predictions: this.emptyObjectList()});
+        this.ws.send(JSON.stringify({ stop: true, id: uid }))
+    }
+
     render() {
         return (
             <div>
                 <Header/>
                 <div className="container-main">
                     <div className="controls">
-                        <Controls canPause={this.state.canPause} pauseConvNet={this.pauseConvNet.bind(this)}
+                        <Controls canPause={this.state.canPause}
+                                  pauseConvNet={this.pauseConvNet.bind(this)}
+                                  stopConvNet={this.stopConvNet.bind(this)}
                                   startConvNet={this.startConvNet.bind(this)}/>
                     </div>
                     <div className="content">

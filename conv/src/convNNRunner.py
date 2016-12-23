@@ -43,13 +43,15 @@ class ConvNNRunner(threading.Thread):
                         "../cifar10/data_batch_4",
                         "../cifar10/data_batch_5"]
         self.paused = False
+        self.should_stop = False
         self.pause_cond = threading.Condition(threading.Lock())
 
+    def stop(self):
+        self.should_stop = True
 
     def pause(self):
         self.paused = True
         self.pause_cond.acquire()
-
 
     def resume(self):
         self.paused = False
@@ -65,6 +67,10 @@ class ConvNNRunner(threading.Thread):
                 with self.pause_cond:
                     if self.paused:
                         self.pause_cond.wait()
+
+                if self.should_stop:
+                    return
+
                 self.setRGBChannels(img_ndarray, x[index])
                 img_ndarray = img_ndarray / 255.0-0.5
                 self.train(img_ndarray, y[index])
@@ -77,4 +83,4 @@ class ConvNNRunner(threading.Thread):
     def train(self, i, y):
         depth, y_input, x_input = i.shape
         stats = self.trainer.train(ConvMatrix(depth, y_input, x_input, i.copy()), y)
-        self.training_hook.onForwardProp(toimage(i), stats)
+        self.training_hook.on_forward_prop(toimage(i), stats)

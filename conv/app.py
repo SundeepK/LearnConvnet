@@ -40,20 +40,31 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         event = json.loads(message)
         print(message)
         if {'pause', 'id'} <= set(event):
-            if event['pause']:
-                clients[event['id']].pause()
+            self.handle_pause(event)
+        elif {'stop', 'id'} <= set(event):
+            self.handle_stop(event)
+
+    def handle_stop(self, event):
+        if event['stop']:
+            if event['id'] in clients:
+                clients[event['id']].stop()
+                del clients[event['id']]
+
+    def handle_pause(self, event):
+        if event['pause']:
+            clients[event['id']].pause()
+        else:
+            if event['id'] in clients:
+                clients[event['id']].resume()
             else:
-                if event['id'] in clients:
-                    clients[event['id']].resume()
-                else:
-                    print("starting new thread")
-                    clients[event['id']] = ConvNNRunner(self)
-                    clients[event['id']].start()
+                print("starting new thread")
+                clients[event['id']] = ConvNNRunner(self)
+                clients[event['id']].start()
 
     def on_close(self):
         pass
 
-    def onForwardProp(self, img, stats):
+    def on_forward_prop(self, img, stats):
         output = io.BytesIO()
         img.save(output, format='JPEG')
         self.write_message(output.getvalue(), True)
