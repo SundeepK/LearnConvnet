@@ -9,6 +9,7 @@ import io
 import json
 import tornado.autoreload
 import os
+import signal
 from src.convNNRunner import ConvNNRunner
 
 from tornado.options import define, options, parse_command_line
@@ -72,6 +73,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 public_root = os.path.join(os.path.dirname(__file__), 'web')
 
+def on_shutdown():
+    print('Shutting down')
+    for key, runner in clients.iteritems():
+        print("stopping " + key)
+        runner.stop()
+    clients.clear()
+    tornado.ioloop.IOLoop.instance().stop()
+
+
 settings = dict(
     debug=True,
     static_path=public_root,
@@ -92,5 +102,7 @@ if __name__ == '__main__':
             [tornado.autoreload.watch(dir + '/' + f) for f in files if not f.startswith('.')]
 
     app.listen(options.port)
-    tornado.ioloop.IOLoop.instance().start()
+    io_loop = tornado.ioloop.IOLoop.instance()
+    signal.signal(signal.SIGINT, lambda sig, frame: io_loop.add_callback_from_signal(on_shutdown))
+    io_loop.start()
 

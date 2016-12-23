@@ -47,6 +47,8 @@ class ConvNNRunner(threading.Thread):
         self.pause_cond = threading.Condition(threading.Lock())
 
     def stop(self):
+        if self.paused:
+            self.resume()
         self.should_stop = True
 
     def pause(self):
