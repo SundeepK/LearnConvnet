@@ -44,44 +44,55 @@ class MainLayout extends React.Component {
         this.ws.binaryType = "arraybuffer";
         this.ws.onopen = function () {
         };
-        this.ws.onmessage = this.onMessage.bind(this)
+        this.ws.onmessage = this.onMessage.bind(this);
+        this.addLatestPrediction = this.addLatestPrediction.bind(this);
+        this.addLatestPredictionImg = this.addLatestPredictionImg.bind(this);
     }
 
     onMessage(evt) {
         if (typeof evt.data === "string") {
-            let stats = JSON.parse(evt.data);
-            const predictions = this.state.predictions;
-            let maxAct = 0;
-            let max = 0;
-            let secondMax = 0;
-            for (let i = 0; i < stats.activations.length; i++) {
-                if (stats.activations[i] > maxAct) {
-                    maxAct = stats.activations[i];
-                    secondMax = max;
-                    max = i;
-                }
-            }
-            predictions[0].stats = stats;
-            predictions[0].stats.class1 = classes[max];
-            predictions[0].stats.class2 = classes[secondMax];
-            predictions[0].stats.class1Predication = (stats.activations[max] * 100).toFixed(2);
-            predictions[0].stats.class2Predication = (stats.activations[secondMax] * 100).toFixed(2);
+            this.addLatestPrediction(evt);
         } else {
-            let imageWidth = 32, imageHeight = 32;
-            let blob = new Blob([(evt.data)], {type: 'image/jpeg'});
-            let url = (window.URL || window.webkitURL).createObjectURL(blob);
-            let image = {};
-            image.width = imageWidth;
-            image.height = imageHeight;
-            image.src = url;
-
-            const predictions = this.state.predictions;
-            if (predictions.length >= 253) {
-                predictions.pop();
-            }
-            predictions.unshift(image);
-            this.setState({predictions: predictions});
+            this.addLatestPredictionImg(evt);
         }
+    }
+
+    addLatestPredictionImg(evt) {
+        let imageWidth = 32, imageHeight = 32;
+        let blob = new Blob([(evt.data)], {type: 'image/jpeg'});
+        let url = (window.URL || window.webkitURL).createObjectURL(blob);
+        let image = {};
+        image.width = imageWidth;
+        image.height = imageHeight;
+        image.src = url;
+
+        const predictions = this.state.predictions;
+        if (predictions.length >= 253) {
+            predictions.pop();
+        }
+        predictions.unshift(image);
+        this.setState({predictions: predictions});
+    }
+
+    addLatestPrediction(evt) {
+        let stats = JSON.parse(evt.data);
+        const predictions = this.state.predictions;
+        let maxAct = 0;
+        let max = 0;
+        let secondMax = 0;
+        for (let i = 0; i < stats.activations.length; i++) {
+            if (stats.activations[i] > maxAct) {
+                maxAct = stats.activations[i];
+                secondMax = max;
+                max = i;
+            }
+        }
+        predictions[0].stats = stats;
+        predictions[0].stats.class1 = classes[max];
+        predictions[0].stats.class2 = classes[secondMax];
+        predictions[0].stats.class1Predication = (stats.activations[max] * 100).toFixed(2);
+        predictions[0].stats.class2Predication = (stats.activations[secondMax] * 100).toFixed(2);
+        this.setState({predictions: predictions});
     }
 
     pauseConvNet() {
