@@ -59,11 +59,11 @@ class LossGraph {
         this.svg.select(".line")
             .attr("d", this.valueline(data));
 
-        this.svg.select(".x")
-            .call(this.x);
+        this.svg.selectAll("g.x.axis")
+            .call(d3.axisBottom(this.x));
 
-        this.svg.select(".y")
-            .call(this.y);
+        this.svg.selectAll("g.y.axis")
+            .call(d3.axisLeft(this.y));
     }
 }
 export default LossGraph;
