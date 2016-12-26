@@ -17,7 +17,7 @@ class LossGraph {
         // define the line
         this.valueline = d3.line()
             .x(function(d) { return x(d.count); })
-            .y(function(d) { return y(d.stats.cost_loss); });
+            .y(function(d) { return y(d.cost_loss); });
 
         this.x = x;
         this.y = y;
@@ -53,7 +53,7 @@ class LossGraph {
         }));
 
         this.y.domain([0, d3.max(data, function (d) {
-            return d.stats.cost_loss;
+            return d.cost_loss;
         })]);
 
         this.svg.select(".line")

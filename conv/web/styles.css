@@ -18,7 +18,15 @@ body {
 
 .graph {
     width: 800px;
-    background: #222;
+    height: 350px;
+    /*background: #222;*/
+}
+
+.line {
+    stroke: steelblue;
+    fill: none;
+    stroke-width: 2px;
+    /*shape-rendering: auto;*/
 }
 
 .content {
