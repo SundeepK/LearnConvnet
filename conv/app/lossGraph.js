@@ -21,9 +21,7 @@ class LossGraph {
 
         this.x = x;
         this.y = y;
-        // append the svg object to the body of the page
-        // appends a 'group' element to 'svg'
-        // moves the 'group' element to the top left margin
+
         this.svg = d3.select(element).append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -43,6 +41,10 @@ class LossGraph {
             .attr("transform", "translate(0," + "-15" + ")")
             .call(d3.axisLeft(this.y));
 
+        this.svg.append("path")
+            .attr("class", "line")
+            .attr("d", this.valueline([]));
+
     }
 
     update(data){
@@ -54,25 +56,14 @@ class LossGraph {
             return d.stats.cost_loss;
         })]);
 
-        var d = this.svg.selectAll(".line")
-            .data(data);
+        this.svg.select(".line")
+            .attr("d", this.valueline(data));
 
-        d.remove()
-            .exit();
-
-        d.enter()
-            .append("path")
-            .datum(data)
-            .attr("class", "line")
-            .attr("d", this.valueline);
-
-        this.svg.select(".x") // change the x axis
+        this.svg.select(".x")
             .call(this.x);
 
-        this.svg.select(".y") // change the y axis
+        this.svg.select(".y")
             .call(this.y);
-
-
     }
 }
 export default LossGraph;
