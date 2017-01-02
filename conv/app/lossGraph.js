@@ -1,8 +1,6 @@
 import * as d3 from "d3";
 'use strict';
 
-const MAX_POINTS_BEFORE_TAKING_AVG = 50;
-
 class LossGraph {
 
     constructor(height, width, element) {
@@ -11,7 +9,7 @@ class LossGraph {
         let margin = {top: 5, right: 20, bottom: 10, left: 50};
         this.width = width - margin.left - margin.right;
         this.height = height - margin.top - margin.bottom;
-        this.graphData = [];
+
 
         // set the ranges
         var x = d3.scaleLinear().range([0, width]);
@@ -50,47 +48,39 @@ class LossGraph {
 
     }
 
-    getRunningAvgClassificationLoss(data){
-        let totalClassLoss = 0;
-        let total = 0;
-        for(let i = 0; i < data.length; i++){
-            if (data[i].hasOwnProperty("count")) {
-                totalClassLoss += data[i].cost_loss;
-                total++;
-            }
-        }
-        if (totalClassLoss == 0 || total == 0 ) {
-            return 0;
-        }
-        return (totalClassLoss / total);
-    }
+    update(data) {
+        this.x.domain([0, d3.max(data, function (d) {
+            return d.count;
+        })]);
 
-    update(data){
-        if (data.length > 0 && data[0].count % MAX_POINTS_BEFORE_TAKING_AVG == 0) {
+        this.y.domain([0, d3.max(data, function (d) {
+            return d.cost_loss;
+        })]);
 
-            if (data.length == MAX_POINTS_BEFORE_TAKING_AVG) {
-                this.graphData.push({count: 0, cost_loss: data[0].cost_loss});
-            } else {
-                this.graphData.push({count: this.graphData.length * MAX_POINTS_BEFORE_TAKING_AVG, cost_loss: this.getRunningAvgClassificationLoss(data)});
-            }
+        this.svg.select(".line")
+            .attr("d", this.valueline(data));
 
-            this.x.domain([0, d3.max(data, function (d) {
-                return d.count;
-            })]);
+        let xScale = this.x;
+        let yScale = this.y;
 
-            this.y.domain([0, d3.max(data, function (d) {
-                return d.cost_loss;
-            })]);
+        // const circles = this.svg.selectAll("dot")
+        //     .data(data);
+        //
+        // circles
+        //     .exit()
+        //     .remove();
+        //
+        // circles
+        //     .enter().append("circle")
+        //     .attr("r", 3.5)
+        //     .attr("cx", function(d) { return xScale(d.count); })
+        //     .attr("cy", function(d) { return yScale(d.cost_loss); });
 
-            this.svg.select(".line")
-                .attr("d", this.valueline(this.graphData));
+        this.svg.selectAll("g.x.axis")
+            .call(d3.axisBottom(this.x));
 
-            this.svg.selectAll("g.x.axis")
-                .call(d3.axisBottom(this.x));
-
-            this.svg.selectAll("g.y.axis")
-                .call(d3.axisLeft(this.y));
-        }
+        this.svg.selectAll("g.y.axis")
+            .call(d3.axisLeft(this.y));
     }
 }
 export default LossGraph;

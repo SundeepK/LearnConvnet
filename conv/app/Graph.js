@@ -2,15 +2,21 @@ import React from "react"
 import ReactDOM from "react-dom"
 import LossGraph from './lossGraph';
 
+const MAX_POINTS_BEFORE_TAKING_AVG = 10;
+
 class Graph extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            predictions:[]
+            predictions: []
         };
+        this.costAvgs = {};
+        this.keys = [];
         this.setUpLossGraph = this.setUpLossGraph.bind(this);
         this.updateLossGraph = this.updateLossGraph.bind(this);
+        this.getRunningAvgClassificationLoss = this.getRunningAvgClassificationLoss.bind(this);
+        this.getFromAvgs = this.getFromAvgs.bind(this);
         this.lossGraph = {};
     }
 
@@ -33,9 +39,43 @@ class Graph extends React.Component {
         }).map(function(itr) {
             return {count: itr.count, cost_loss: parseFloat(itr.stats.cost_loss)}
         });
-        if (itemsToUpdate.length > 0) {
-            this.updateLossGraph(itemsToUpdate)
+
+        if (itemsToUpdate.length > 0 && itemsToUpdate[0].count % MAX_POINTS_BEFORE_TAKING_AVG == 0) {
+            if (itemsToUpdate.length == MAX_POINTS_BEFORE_TAKING_AVG) {
+                this.costAvgs[0] = {count: 0, cost_loss: itemsToUpdate[0].cost_loss};
+                this.keys.push(0);
+            } else {
+                if (!this.costAvgs.hasOwnProperty(itemsToUpdate[0].count)) {
+                    this.costAvgs[itemsToUpdate[0].count] = {
+                        count: itemsToUpdate[0].count,
+                        cost_loss: this.getRunningAvgClassificationLoss(itemsToUpdate)
+                    };
+                    this.keys.push(itemsToUpdate[0].count);
+                }
+            }
+
+            let data = this.keys.map(this.getFromAvgs);
+            this.updateLossGraph(data)
         }
+    }
+
+    getFromAvgs(i){
+        return this.costAvgs[i]
+    }
+
+    getRunningAvgClassificationLoss(data){
+        let totalClassLoss = 0;
+        let total = 0;
+        for(let i = 0; i < data.length; i++){
+            if (data[i].hasOwnProperty("count")) {
+                totalClassLoss += data[i].cost_loss;
+                total++;
+            }
+        }
+        if (totalClassLoss == 0 || total == 0 ) {
+            return 0;
+        }
+        return (totalClassLoss / total);
     }
 
     componentWillUnmount() {
