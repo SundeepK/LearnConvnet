@@ -1,6 +1,8 @@
 import * as d3 from "d3";
 'use strict';
 
+const MAX_POINTS_BEFORE_TAKING_AVG = 50;
+
 class LossGraph {
 
     constructor(height, width, element) {
@@ -64,15 +66,17 @@ class LossGraph {
     }
 
     update(data){
-        if (data.length % 50 == 0) {
-            if (data.length == 50) {
-                this.graphData.push({count: 0, cost_loss: data[0].cost_loss});
-            }
-            this.graphData.push({count: data.length, cost_loss: this.getRunningAvgClassificationLoss(data)});
+        if (data.length > 0 && data[0].count % MAX_POINTS_BEFORE_TAKING_AVG == 0) {
 
-            this.x.domain(d3.extent(data, function (d) {
+            if (data.length == MAX_POINTS_BEFORE_TAKING_AVG) {
+                this.graphData.push({count: 0, cost_loss: data[0].cost_loss});
+            } else {
+                this.graphData.push({count: this.graphData.length * MAX_POINTS_BEFORE_TAKING_AVG, cost_loss: this.getRunningAvgClassificationLoss(data)});
+            }
+
+            this.x.domain([0, d3.max(data, function (d) {
                 return d.count;
-            }));
+            })]);
 
             this.y.domain([0, d3.max(data, function (d) {
                 return d.cost_loss;
