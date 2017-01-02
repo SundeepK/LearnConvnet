@@ -1,8 +1,12 @@
 import React, {Component} from 'react'
+import Panel from 'react-bootstrap/lib/Panel';
+import ListGroup from 'react-bootstrap/lib/ListGroup';
+import ListGroupItem from 'react-bootstrap/lib/ListGroupItem';
 import {Router, Route, Link, IndexRoute, hashHistory, browserHistory} from 'react-router'
 import Header from './Header';
 import Graph from './Graph';
 import Controls from './Controls';
+import Stats from './Stats';
 import Predictions from './Predictions';
 
 const classes = {
@@ -28,12 +32,14 @@ class MainLayout extends React.Component {
             canPause: false,
             predictions: this.emptyObjectList()
         };
-        this.emptyObjectList = this.emptyObjectList.bind(this)
+        this.emptyObjectList = this.emptyObjectList.bind(this);
+        this.getRunningAvgClassificationLoss = this.getRunningAvgClassificationLoss.bind(this);
+        this.count = 0;
     }
 
     emptyObjectList(){
         let arr = [];
-        for (let i = 0; i < 256; i++) {
+        for (let i = 0; i < 265; i++) {
             arr[i] = {};
         }
         return arr;
@@ -67,7 +73,7 @@ class MainLayout extends React.Component {
         image.src = url;
 
         const predictions = this.state.predictions;
-        if (predictions.length >= 253) {
+        if (predictions.length >= 265) {
             predictions.pop();
         }
         predictions.unshift(image);
@@ -87,11 +93,13 @@ class MainLayout extends React.Component {
                 max = i;
             }
         }
+        this.count++;
         predictions[0].stats = stats;
         predictions[0].stats.class1 = classes[max];
         predictions[0].stats.class2 = classes[secondMax];
         predictions[0].stats.class1Predication = (stats.activations[max] * 100).toFixed(2);
         predictions[0].stats.class2Predication = (stats.activations[secondMax] * 100).toFixed(2);
+        predictions[0].count = this.count;
         this.setState({predictions: predictions});
     }
 
@@ -110,19 +118,44 @@ class MainLayout extends React.Component {
         this.ws.send(JSON.stringify({ stop: true, id: uid }))
     }
 
+    getRunningAvgClassificationLoss(){
+        let predictions = this.state.predictions;
+        let totalClassLoss = 0;
+        let total= 0 ;
+        for(let i = 0; i < predictions.length; i++){
+            if (predictions[i].hasOwnProperty("stats")) {
+                totalClassLoss += predictions[i].stats.cost_loss;
+                total++;
+            }
+        }
+        if (totalClassLoss == 0) {
+            return 0;
+        }
+        return (totalClassLoss / total);
+    }
+
     render() {
         return (
             <div>
                 <Header/>
                 <div className="container-main">
-                    <div className="controls">
-                        <Controls canPause={this.state.canPause}
-                                  pauseConvNet={this.pauseConvNet.bind(this)}
-                                  stopConvNet={this.stopConvNet.bind(this)}
-                                  startConvNet={this.startConvNet.bind(this)}/>
-                    </div>
                     <div className="content">
-                        <Graph/><Graph/>
+                        <div className="controls">
+                            <Panel collapsible defaultExpanded header="Controls & stats">
+                                <ListGroup fill>
+                                    <ListGroupItem>
+                                        <Controls canPause={this.state.canPause}
+                                                  pauseConvNet={this.pauseConvNet.bind(this)}
+                                                  stopConvNet={this.stopConvNet.bind(this)}
+                                                  startConvNet={this.startConvNet.bind(this)}/>
+                                    </ListGroupItem>
+                                    <ListGroupItem>
+                                        <Stats avgClassificationLoss={this.getRunningAvgClassificationLoss()} totalExamples={this.count}/>
+                                    </ListGroupItem>
+                                </ListGroup>
+                            </Panel>
+                        </div>
+                        <Graph key="twograph" data={this.state.predictions}/>
                     </div>
                     <Predictions predictions={this.state.predictions}/>
                 </div>

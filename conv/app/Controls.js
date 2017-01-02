@@ -1,7 +1,6 @@
 import React from "react"
 import ButtonToolbar from 'react-bootstrap/lib/ButtonToolbar';
 import Button from 'react-bootstrap/lib/Button';
-import Panel from 'react-bootstrap/lib/Panel';
 
 class Controls extends React.Component {
 
@@ -18,15 +17,13 @@ class Controls extends React.Component {
         }
         return (
             <div >
-                <Panel header="Controls">
-                    <div >
-                        <ButtonToolbar>
-                            {but}
-                            <Button bsStyle="primary">Save</Button>
-                            <Button bsStyle="danger" onClick={this.props.stopConvNet}>Stop</Button>
-                        </ButtonToolbar>
-                    </div>
-                </Panel>
+                <div >
+                    <ButtonToolbar>
+                        {but}
+                        <Button bsStyle="primary">Save</Button>
+                        <Button bsStyle="danger" onClick={this.props.stopConvNet}>Stop</Button>
+                    </ButtonToolbar>
+                </div>
             </div>
         );
     }
