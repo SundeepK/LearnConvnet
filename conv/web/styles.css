@@ -10,6 +10,7 @@ body {
 }
 
 .predictions {
+    width: 110em;
     margin-top: 10px;
     display: flex;
     flex-direction: row;
@@ -29,9 +30,19 @@ body {
     /*shape-rendering: auto;*/
 }
 
+.table {
+    border-bottom:0px !important;
+}
+.table th, .table td {
+    border: 1px !important;
+}
+.fixed-table-container {
+    border:0px !important;
+}
+
 .content {
     margin: 0 auto;
-    width: 80%;
+    width: 110em;
     display: flex;
     justify-content: center;
 }
