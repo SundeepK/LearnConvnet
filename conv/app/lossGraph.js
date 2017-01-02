@@ -9,6 +9,7 @@ class LossGraph {
         let margin = {top: 5, right: 20, bottom: 10, left: 50};
         this.width = width - margin.left - margin.right;
         this.height = height - margin.top - margin.bottom;
+        this.graphData = [];
 
         // set the ranges
         var x = d3.scaleLinear().range([0, width]);
@@ -47,23 +48,45 @@ class LossGraph {
 
     }
 
+    getRunningAvgClassificationLoss(data){
+        let totalClassLoss = 0;
+        let total = 0;
+        for(let i = 0; i < data.length; i++){
+            if (data[i].hasOwnProperty("count")) {
+                totalClassLoss += data[i].cost_loss;
+                total++;
+            }
+        }
+        if (totalClassLoss == 0 || total == 0 ) {
+            return 0;
+        }
+        return (totalClassLoss / total);
+    }
+
     update(data){
-        this.x.domain(d3.extent(data, function (d) {
-            return d.count;
-        }));
+        if (data.length % 50 == 0) {
+            if (data.length == 50) {
+                this.graphData.push({count: 0, cost_loss: data[0].cost_loss});
+            }
+            this.graphData.push({count: data.length, cost_loss: this.getRunningAvgClassificationLoss(data)});
 
-        this.y.domain([0, d3.max(data, function (d) {
-            return d.cost_loss;
-        })]);
+            this.x.domain(d3.extent(data, function (d) {
+                return d.count;
+            }));
 
-        this.svg.select(".line")
-            .attr("d", this.valueline(data));
+            this.y.domain([0, d3.max(data, function (d) {
+                return d.cost_loss;
+            })]);
 
-        this.svg.selectAll("g.x.axis")
-            .call(d3.axisBottom(this.x));
+            this.svg.select(".line")
+                .attr("d", this.valueline(this.graphData));
 
-        this.svg.selectAll("g.y.axis")
-            .call(d3.axisLeft(this.y));
+            this.svg.selectAll("g.x.axis")
+                .call(d3.axisBottom(this.x));
+
+            this.svg.selectAll("g.y.axis")
+                .call(d3.axisLeft(this.y));
+        }
     }
 }
 export default LossGraph;

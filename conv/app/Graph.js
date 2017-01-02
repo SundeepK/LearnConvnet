@@ -33,7 +33,6 @@ class Graph extends React.Component {
         }).map(function(itr) {
             return {count: itr.count, cost_loss: parseFloat(itr.stats.cost_loss)}
         });
-        console.log(itemsToUpdate);
         if (itemsToUpdate.length > 0) {
             this.updateLossGraph(itemsToUpdate)
         }
