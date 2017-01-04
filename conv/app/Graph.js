@@ -2,7 +2,7 @@ import React from "react"
 import ReactDOM from "react-dom"
 import LossGraph from './lossGraph';
 
-const MAX_POINTS_BEFORE_TAKING_AVG = 10;
+const MAX_POINTS_BEFORE_TAKING_AVG = 50;
 
 class Graph extends React.Component {
 
@@ -40,20 +40,21 @@ class Graph extends React.Component {
             return {count: itr.count, cost_loss: parseFloat(itr.stats.cost_loss)}
         });
 
+        // re-init hash and arrays because first item seen
+        if(itemsToUpdate.length == 0 && this.keys.length > 0){
+            this.costAvgs = {};
+            this.keys = [];
+            this.lossGraph.clear();
+        }
+
         if (itemsToUpdate.length > 0 && itemsToUpdate[0].count % MAX_POINTS_BEFORE_TAKING_AVG == 0) {
-            if (itemsToUpdate.length == MAX_POINTS_BEFORE_TAKING_AVG) {
-                this.costAvgs[0] = {count: 0, cost_loss: itemsToUpdate[0].cost_loss};
-                this.keys.push(0);
-            } else {
-                if (!this.costAvgs.hasOwnProperty(itemsToUpdate[0].count)) {
+                  if (!this.costAvgs.hasOwnProperty(itemsToUpdate[0].count)) {
                     this.costAvgs[itemsToUpdate[0].count] = {
                         count: itemsToUpdate[0].count,
                         cost_loss: this.getRunningAvgClassificationLoss(itemsToUpdate)
                     };
                     this.keys.push(itemsToUpdate[0].count);
-                }
             }
-
             let data = this.keys.map(this.getFromAvgs);
             this.updateLossGraph(data)
         }

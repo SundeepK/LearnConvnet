@@ -48,7 +48,15 @@ class LossGraph {
 
     }
 
+    clear(){
+        this.svg.selectAll(".line").remove();
+        this.svg.append("path")
+            .attr("class", "line")
+            .attr("d", this.valueline([]));
+    }
+
     update(data) {
+
         this.x.domain([0, d3.max(data, function (d) {
             return d.count;
         })]);

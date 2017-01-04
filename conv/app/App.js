@@ -30,6 +30,7 @@ class MainLayout extends React.Component {
         super(props);
         this.state = {
             canPause: false,
+            clearGraph: false,
             predictions: this.emptyObjectList()
         };
         this.emptyObjectList = this.emptyObjectList.bind(this);
@@ -115,6 +116,7 @@ class MainLayout extends React.Component {
 
     stopConvNet() {
         this.setState({stop: true, canPause: false, predictions: this.emptyObjectList()});
+        this.count = 0;
         this.ws.send(JSON.stringify({ stop: true, id: uid }))
     }
 
