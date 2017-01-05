@@ -58,6 +58,7 @@ run(trainer, "../cifar10/data_batch_2")
 run(trainer, "../cifar10/data_batch_3")
 # run(trainer, "../cifar10/data_batch_4")
 # run(trainer, "../cifar10/data_batch_5")
+# toimage(data).show()
 
 
 

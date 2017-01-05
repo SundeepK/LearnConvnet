@@ -13,9 +13,7 @@ import cifarUtils
 import time
 import threading
 import sys
-from examples import Examples
-from flippedExamples import FlippedExamples
-from zoomCroppedExamples import ZoomCroppedExamples
+from imageAugmentor import ImageAugmentor
 
 MAX_IMAGES_PER_BATCH = 3000
 
@@ -40,14 +38,15 @@ class ConvNNRunner(threading.Thread):
         self.convNet = ConvNet(self.layers)
         self.trainer = ConvNetTrainer(0.0001, 0.95, 0.00000001, 4, self.convNet)
         self.training_hook = training_hook
-        self.batches = [Examples("./cifar10/data_batch_1"),
-                        Examples("../cifar10/data_batch_2"),
-                        Examples("../cifar10/data_batch_3"),
-                        Examples("../cifar10/data_batch_4"),
-                        Examples("../cifar10/data_batch_5")]
+        self.batches = ["./cifar10/data_batch_1",
+                        "../cifar10/data_batch_2",
+                        "../cifar10/data_batch_3",
+                        "../cifar10/data_batch_4",
+                        "../cifar10/data_batch_5"]
         self.paused = False
         self.should_stop = False
         self.pause_cond = threading.Condition(threading.Lock())
+        self.imageAugmentor = ImageAugmentor(1.2    )
 
     def stop(self):
         if self.paused:
@@ -64,19 +63,19 @@ class ConvNNRunner(threading.Thread):
         self.pause_cond.release()
 
     def run(self):
-        for example in self.batches:
-            example.loadExamples()
+        for batch in self.batches:
+            x, y = cifarUtils.load_CIFAR_batch(batch)
             for index in range(0, MAX_IMAGES_PER_BATCH):
                 # wait if paused
                 with self.pause_cond:
                     if self.paused:
                         self.pause_cond.wait()
                 if self.should_stop:
-                    example.deleteExamples()
                     return
-                x, y = example.get(index)
-                self.train(x, y)
-            example.deleteExamples()
+                xs = self.imageAugmentor.get(x[index])
+                for example in xs:
+                    self.train(example, y[index])
+
 
     def setRGBChannels(self, i, x):
             i[0] = x[:, :, 0]
