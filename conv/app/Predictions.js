@@ -17,6 +17,7 @@ class Predictions extends React.Component{
                                        class2={prediction.stats.class2}
                                        class1Predication={prediction.stats.class1Predication}
                                        class2Predication={prediction.stats.class2Predication}
+                                       expected_prediction={prediction.stats.expectedClass}
                 />
             } else {
                 items[i] = <Prediction key={i} />

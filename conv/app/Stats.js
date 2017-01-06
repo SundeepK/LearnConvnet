@@ -22,6 +22,10 @@ class Stats extends React.Component {
                             <td>Examples seen</td>
                             <td>{this.props.totalExamples}</td>
                         </tr>
+                        <tr>
+                            <td>Test Accuracy</td>
+                            <td>{this.props.testAccuracy}</td>
+                        </tr>
                         </tbody>
                     </Table>
                 </div>

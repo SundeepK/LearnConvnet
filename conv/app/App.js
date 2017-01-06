@@ -29,12 +29,17 @@ class MainLayout extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            testAccuracy: [],
             canPause: false,
             clearGraph: false,
-            predictions: this.emptyObjectList()
+            trainingPredictions: this.emptyObjectList(),
+            testPredictions: this.emptyObjectList()
         };
         this.emptyObjectList = this.emptyObjectList.bind(this);
         this.getRunningAvgClassificationLoss = this.getRunningAvgClassificationLoss.bind(this);
+        this.addLatestTestPrediction = this.addLatestTestPrediction.bind(this);
+        this.addTestAccuracy = this.addTestAccuracy.bind(this);
+        this.getRunningAvgTestAccuracy = this.getRunningAvgTestAccuracy.bind(this);
         this.count = 0;
     }
 
@@ -52,19 +57,36 @@ class MainLayout extends React.Component {
         this.ws.onopen = function () {
         };
         this.ws.onmessage = this.onMessage.bind(this);
-        this.addLatestPrediction = this.addLatestPrediction.bind(this);
-        this.addLatestPredictionImg = this.addLatestPredictionImg.bind(this);
+        this.addLatestTrainingPrediction = this.addLatestTrainingPrediction.bind(this);
+        this.addLatestTestPredictionImg = this.addLatestTestPredictionImg.bind(this);
     }
 
     onMessage(evt) {
         if (typeof evt.data === "string") {
-            this.addLatestPrediction(evt);
+            let stats = JSON.parse(evt.data);
+            if (stats.hasOwnProperty('training')) {
+                this.addLatestTrainingPrediction(stats);
+            } else if (stats.hasOwnProperty('test_accuracy')){
+                this.addTestAccuracy(stats);
+            } else if (stats.hasOwnProperty('test_activations')) {
+                this.addLatestTestPrediction(stats);
+            }
         } else {
-            this.addLatestPredictionImg(evt);
+            // if not json is a raw binary img
+            this.addLatestTestPredictionImg(evt);
         }
     }
 
-    addLatestPredictionImg(evt) {
+    addTestAccuracy(stats){
+        const testAccuracies = this.state.testAccuracy;
+        if (testAccuracies.length >= 265) {
+            testAccuracies.pop();
+        }
+        testAccuracies.unshift(stats.test_accuracy);
+        this.setState({testAccuracy: testAccuracies});
+    }
+
+    addLatestTestPredictionImg(evt) {
         let imageWidth = 32, imageHeight = 32;
         let blob = new Blob([(evt.data)], {type: 'image/jpeg'});
         let url = (window.URL || window.webkitURL).createObjectURL(blob);
@@ -73,17 +95,39 @@ class MainLayout extends React.Component {
         image.height = imageHeight;
         image.src = url;
 
-        const predictions = this.state.predictions;
+        const predictions = this.state.testPredictions;
         if (predictions.length >= 265) {
             predictions.pop();
         }
         predictions.unshift(image);
-        this.setState({predictions: predictions});
+        this.setState({testPredictions: predictions});
     }
 
-    addLatestPrediction(evt) {
-        let stats = JSON.parse(evt.data);
-        const predictions = this.state.predictions;
+    addLatestTestPrediction(stats) {
+        const predictions = this.state.testPredictions;
+        let maxAct = 0;
+        let max = 0;
+        let secondMax = 0;
+        for (let i = 0; i < stats.test_activations.length; i++) {
+            if (stats.test_activations[i] > maxAct) {
+                maxAct = stats.test_activations[i];
+                secondMax = max;
+                max = i;
+            }
+        }
+        this.count++;
+        predictions[0].stats = stats;
+        predictions[0].stats.class1 = classes[max];
+        predictions[0].stats.class2 = classes[secondMax];
+        predictions[0].stats.class1Predication = (stats.test_activations[max] * 100).toFixed(2);
+        predictions[0].stats.class2Predication = (stats.test_activations[secondMax] * 100).toFixed(2);
+        predictions[0].count = this.count;
+        predictions[0].stats.expectedClass = classes[stats.expected_prediction];
+        this.setState({testPredictions: predictions});
+    }
+
+    addLatestTrainingPrediction(stats) {
+        const predictions = this.state.trainingPredictions;
         let maxAct = 0;
         let max = 0;
         let secondMax = 0;
@@ -101,7 +145,7 @@ class MainLayout extends React.Component {
         predictions[0].stats.class1Predication = (stats.activations[max] * 100).toFixed(2);
         predictions[0].stats.class2Predication = (stats.activations[secondMax] * 100).toFixed(2);
         predictions[0].count = this.count;
-        this.setState({predictions: predictions});
+        this.setState({trainingPredictions: predictions});
     }
 
     pauseConvNet() {
@@ -115,13 +159,13 @@ class MainLayout extends React.Component {
     }
 
     stopConvNet() {
-        this.setState({stop: true, canPause: false, predictions: this.emptyObjectList()});
+        this.setState({stop: true, canPause: false, trainingPredictions: this.emptyObjectList()});
         this.count = 0;
         this.ws.send(JSON.stringify({ stop: true, id: uid }))
     }
 
     getRunningAvgClassificationLoss(){
-        let predictions = this.state.predictions;
+        let predictions = this.state.trainingPredictions;
         let totalClassLoss = 0;
         let total= 0 ;
         for(let i = 0; i < predictions.length; i++){
@@ -134,6 +178,18 @@ class MainLayout extends React.Component {
             return 0;
         }
         return (totalClassLoss / total);
+    }
+
+    getRunningAvgTestAccuracy(){
+        let testAccuracy = this.state.testAccuracy;
+        let totalAvgTestAccuracy = 0;
+        for(let i = 0; i < testAccuracy.length; i++){
+            totalAvgTestAccuracy += testAccuracy[i];
+        }
+        if (totalAvgTestAccuracy == 0) {
+            return 0;
+        }
+        return (totalAvgTestAccuracy / testAccuracy.length);
     }
 
     render() {
@@ -152,14 +208,18 @@ class MainLayout extends React.Component {
                                                   startConvNet={this.startConvNet.bind(this)}/>
                                     </ListGroupItem>
                                     <ListGroupItem>
-                                        <Stats avgClassificationLoss={this.getRunningAvgClassificationLoss()} totalExamples={this.count}/>
+                                        <Stats avgClassificationLoss={this.getRunningAvgClassificationLoss()}
+                                               totalExamples={this.count}
+                                               testAccuracy={this.getRunningAvgTestAccuracy()}
+                                        />
                                     </ListGroupItem>
                                 </ListGroup>
                             </Panel>
                         </div>
-                        <Graph key="twograph" data={this.state.predictions}/>
+                        <Graph key="twograph" trainingPredictions={this.state.trainingPredictions}/>
                     </div>
-                    <Predictions predictions={this.state.predictions}/>
+                    Test predictions run every 200 training samples:
+                    <Predictions predictions={this.state.testPredictions}/>
                 </div>
 
             </div>

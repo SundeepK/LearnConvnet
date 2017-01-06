@@ -15,6 +15,7 @@ import threading
 import sys
 from imageAugmentor import ImageAugmentor
 
+TEST_RUN = 200
 MAX_IMAGES_PER_BATCH = 3000
 
 
@@ -46,7 +47,7 @@ class ConvNNRunner(threading.Thread):
         self.paused = False
         self.should_stop = False
         self.pause_cond = threading.Condition(threading.Lock())
-        self.imageAugmentor = ImageAugmentor(1.2    )
+        self.image_augmentor = ImageAugmentor(1.2)
 
     def stop(self):
         if self.paused:
@@ -63,6 +64,7 @@ class ConvNNRunner(threading.Thread):
         self.pause_cond.release()
 
     def run(self):
+        test_xs, test_ys = cifarUtils.load_CIFAR_batch("./cifar10/test_batch")
         for batch in self.batches:
             x, y = cifarUtils.load_CIFAR_batch(batch)
             for index in range(0, MAX_IMAGES_PER_BATCH):
@@ -72,10 +74,36 @@ class ConvNNRunner(threading.Thread):
                         self.pause_cond.wait()
                 if self.should_stop:
                     return
-                xs = self.imageAugmentor.get(x[index])
-                for example in xs:
-                    self.train(example, y[index])
+                if index % TEST_RUN == 0 and index > 0:
+                    self.testExamples(test_xs, test_ys)
+                else:
+                    self.trainExample(x[index], y[index])
 
+    def testExamples(self, x_examples, ys):
+        random_samples = numpy.random.randint(low=0, high=3000, size=10)
+        depth, y_input, x_input = x_examples[0].shape
+        example_activations = []
+        total_correct = 0.0
+        total = 0.0
+        for sample in random_samples:
+            augmented_examples = self.image_augmentor.get(x_examples[sample])
+            for index, example in enumerate(augmented_examples):
+                activations = self.convNet.forward(ConvMatrix(depth, y_input, x_input, example.copy()))
+                max_index = numpy.argmax(activations)
+                if max_index == ys[sample]:
+                    total_correct += 1
+                total += 1
+                # save activations of un-augmented img
+                if index == 0:
+                    example_activations.append(activations)
+        self.training_hook.on_test_set_validation({'test_accuracy':  total_correct/total})
+        for index, sample in enumerate(random_samples):
+            self.training_hook.on_forward_prop(toimage(x_examples[sample]), {'test_activations': example_activations[index].tolist(), 'expected_prediction': ys[sample]})
+
+    def trainExample(self, x, y):
+        xs = self.image_augmentor.get(x)
+        for example in xs:
+            self.train(example, y)
 
     def setRGBChannels(self, i, x):
             i[0] = x[:, :, 0]
@@ -85,4 +113,4 @@ class ConvNNRunner(threading.Thread):
     def train(self, i, y):
         depth, y_input, x_input = i.shape
         stats = self.trainer.train(ConvMatrix(depth, y_input, x_input, i.copy()), y)
-        self.training_hook.on_forward_prop(toimage(i), stats)
+        self.training_hook.on_train(stats.__dict__)

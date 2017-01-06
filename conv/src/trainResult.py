@@ -7,6 +7,7 @@ from scipy import signal
 class TrainingResult(object):
 
     def __init__(self, l2_decay_loss, cost_loss, total_loss, forward_time, backwards_time, activations):
+        self.training = True
         self.l2_decay_loss = l2_decay_loss
         self.cost_loss = cost_loss
         self.total_loss = total_loss

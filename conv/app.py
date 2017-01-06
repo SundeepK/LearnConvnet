@@ -69,7 +69,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         output = io.BytesIO()
         img.save(output, format='JPEG')
         self.write_message(output.getvalue(), True)
-        self.write_message(json.dumps(stats.__dict__), False)
+        self.write_message(json.dumps(stats), False)
+
+    def on_train(self, stats):
+        self.write_message(json.dumps(stats), False)
+
+    def on_test_set_validation(self, stats):
+        self.write_message(json.dumps(stats), False)
 
 public_root = os.path.join(os.path.dirname(__file__), 'web')
 

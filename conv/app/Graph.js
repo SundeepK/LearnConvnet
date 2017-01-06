@@ -34,7 +34,7 @@ class Graph extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        let itemsToUpdate = prevProps.data.filter(function(d) {
+        let itemsToUpdate = prevProps.trainingPredictions.filter(function(d) {
             return d.hasOwnProperty("count");
         }).map(function(itr) {
             return {count: itr.count, cost_loss: parseFloat(itr.stats.cost_loss)}
