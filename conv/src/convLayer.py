@@ -122,3 +122,22 @@ class ConvLayer(object):
         if len(self.filters) <= 0:
             for i in range(0, self.filter_d):
                 self.filters.append(ConvMatrix(d, self.filter_y, self.filter_x))
+
+    def to_dict(self):
+        out_filters = []
+        for filter in self.filters:
+            out_filters.append(filter.to_dict())
+        return {
+            'type': 'ConvLayer',
+            'stride': self.stride,
+            'padding': self.padding,
+            'filter_d': self.filter_d,
+            'filter_x': self.filter_x,
+            'filter_y': self.filter_y,
+            'name': self.name,
+            'im_2_col_indexes': self.im_2_col_indexes.tolist(),
+            'out_filter_map_x': self.out_filter_map_x,
+            'out_filter_map_y': self.out_filter_map_y,
+            'bias': self.bias.to_dict(),
+            'filters': out_filters
+        }

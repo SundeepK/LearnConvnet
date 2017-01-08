@@ -21,7 +21,7 @@ MAX_IMAGES_PER_BATCH = 3000
 
 class ConvNNRunner(threading.Thread):
 
-    def __init__(self, training_hook):
+    def __init__(self, training_hook, id):
         threading.Thread.__init__(self)
         l1 = InputLayer()
         l2 = ConvLayer(1, 2, 5, 5, 16, "l8")
@@ -48,6 +48,7 @@ class ConvNNRunner(threading.Thread):
         self.should_stop = False
         self.pause_cond = threading.Condition(threading.Lock())
         self.image_augmentor = ImageAugmentor(1.2)
+        self.id = id
 
     def stop(self):
         if self.paused:
@@ -114,3 +115,7 @@ class ConvNNRunner(threading.Thread):
         depth, y_input, x_input = i.shape
         stats = self.trainer.train(ConvMatrix(depth, y_input, x_input, i.copy()), y)
         self.training_hook.on_train(stats.__dict__)
+
+    def save(self):
+        print("save called")
+        self.training_hook.on_convnet_save(self.convNet.get_json())

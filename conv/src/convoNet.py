@@ -1,6 +1,8 @@
 import numpy
 from convMatrix import ConvMatrix
 import math
+import json
+
 
 class ConvNet(object):
 
@@ -28,3 +30,9 @@ class ConvNet(object):
             params_grads = params_grads + self.layers[l].get_params_and_grads()
             params_grads = params_grads + self.layers[l].get_bias_and_grads()
         return params_grads
+
+    def get_json(self):
+        json_array = []
+        for layer in self.layers:
+            json_array.append(layer.to_dict())
+        return json.dumps({'CNN': json_array})

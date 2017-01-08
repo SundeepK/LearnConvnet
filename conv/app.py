@@ -44,6 +44,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.handle_pause(event)
         elif {'stop', 'id'} <= set(event):
             self.handle_stop(event)
+        elif {'save', 'id'} <= set(event):
+            self.handle_save(event)
+
+    def handle_save(self, event):
+        clients[event['id']].save()
 
     def handle_stop(self, event):
         if event['stop']:
@@ -59,11 +64,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 clients[event['id']].resume()
             else:
                 print("starting new thread")
-                clients[event['id']] = ConvNNRunner(self)
+                clients[event['id']] = ConvNNRunner(self, event['id'])
                 clients[event['id']].start()
 
     def on_close(self):
         pass
+
+    def on_convnet_save(self, json_convent):
+        self.write_message(json_convent, False)
 
     def on_forward_prop(self, img, stats):
         output = io.BytesIO()

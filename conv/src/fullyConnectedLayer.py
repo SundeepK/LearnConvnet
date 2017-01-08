@@ -51,3 +51,16 @@ class FullyConnectedLayer(object):
         if len(self.filters) <= 0:
             for i in range(0, self.depth):
                 self.filters.append(ConvMatrix(z, y, x))
+
+    def to_dict(self):
+        out_filters = []
+        for filter in self.filters:
+            out_filters.append(filter.to_dict())
+        return {
+            'type': 'FullyConnectedLayer',
+            'depth': self.depth,
+            'filter_x': self.filter_x,
+            'filter_y': self.filter_y,
+            'bias': self.bias.to_dict(),
+            'filters': out_filters
+        }

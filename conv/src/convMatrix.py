@@ -37,3 +37,12 @@ class ConvMatrix(object):
 
     def set_params(self, p):
         self.params[:] = p
+
+    def to_dict(self):
+        return {
+            'd': self.d,
+            'y': self.y,
+            'x': self.x,
+            'params': self.params.tolist(),
+            'grads': self.grads.tolist()
+        }

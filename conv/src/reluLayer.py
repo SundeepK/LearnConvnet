@@ -24,3 +24,7 @@ class ReluLayer(object):
     def get_bias_and_grads(self):
         return []
 
+    def to_dict(self):
+        return {
+            'type': 'ReluLayer'
+        }

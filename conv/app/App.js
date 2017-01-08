@@ -70,6 +70,8 @@ class MainLayout extends React.Component {
                 this.addTestAccuracy(stats);
             } else if (stats.hasOwnProperty('test_activations')) {
                 this.addLatestTestPrediction(stats);
+            } else if(stats.hasOwnProperty('CNN')){
+                console.log(stats)
             }
         } else {
             // if not json is a raw binary img
@@ -158,6 +160,10 @@ class MainLayout extends React.Component {
         this.ws.send(JSON.stringify({ pause: false, id: uid }))
     }
 
+    saveConvNet(){
+        this.ws.send(JSON.stringify({ save: true, id: uid }))
+    }
+
     stopConvNet() {
         this.setState({stop: true, canPause: false, trainingPredictions: this.emptyObjectList()});
         this.count = 0;
@@ -204,6 +210,7 @@ class MainLayout extends React.Component {
                                     <ListGroupItem>
                                         <Controls canPause={this.state.canPause}
                                                   pauseConvNet={this.pauseConvNet.bind(this)}
+                                                  saveConvNet={this.saveConvNet.bind(this)}
                                                   stopConvNet={this.stopConvNet.bind(this)}
                                                   startConvNet={this.startConvNet.bind(this)}/>
                                     </ListGroupItem>

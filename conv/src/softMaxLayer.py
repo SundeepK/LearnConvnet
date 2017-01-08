@@ -2,6 +2,7 @@ import numpy
 from convMatrix import ConvMatrix
 import math
 
+
 class SoftmaxLayer(object):
 
     def forward(self, inputs):
@@ -24,3 +25,8 @@ class SoftmaxLayer(object):
 
     def get_bias_and_grads(self):
         return []
+
+    def to_dict(self):
+        return {
+            'type': 'SoftmaxLayer'
+        }

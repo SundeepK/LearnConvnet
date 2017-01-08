@@ -20,7 +20,7 @@ class Controls extends React.Component {
                 <div >
                     <ButtonToolbar>
                         {but}
-                        <Button bsStyle="primary">Save</Button>
+                        <Button bsStyle="primary" onClick={this.props.saveConvNet}>Save</Button>
                         <Button bsStyle="danger" onClick={this.props.stopConvNet}>Stop</Button>
                     </ButtonToolbar>
                 </div>
