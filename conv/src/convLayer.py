@@ -135,7 +135,7 @@ class ConvLayer(object):
             'filter_x': self.filter_x,
             'filter_y': self.filter_y,
             'name': self.name,
-            'im_2_col_indexes': self.im_2_col_indexes.tolist(),
+            'im_2_col_indexes': self.im_2_col_indexes,
             'out_filter_map_x': self.out_filter_map_x,
             'out_filter_map_y': self.out_filter_map_y,
             'bias': self.bias.to_dict(),

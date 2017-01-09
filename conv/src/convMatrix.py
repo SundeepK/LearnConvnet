@@ -1,5 +1,6 @@
 import numpy
 from math import sqrt
+import io
 
 
 class ConvMatrix(object):
@@ -43,6 +44,6 @@ class ConvMatrix(object):
             'd': self.d,
             'y': self.y,
             'x': self.x,
-            'params': self.params.tolist(),
-            'grads': self.grads.tolist()
+            'params': self.params,
+            'grads': self.grads
         }

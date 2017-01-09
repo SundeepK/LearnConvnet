@@ -8,6 +8,7 @@ import Graph from './Graph';
 import Controls from './Controls';
 import Stats from './Stats';
 import Predictions from './Predictions';
+import FileSaver from 'file-saver/FileSaver'
 
 const classes = {
     0: 'airplane',
@@ -71,7 +72,10 @@ class MainLayout extends React.Component {
             } else if (stats.hasOwnProperty('test_activations')) {
                 this.addLatestTestPrediction(stats);
             } else if(stats.hasOwnProperty('CNN')){
-                console.log(stats)
+                const blob = new Blob([evt.data], {type: "application/javascript;charset=utf-8"});
+                const d= new Date();
+                const filename = d.getDate()+'-'+d.getMonth() + 1 +'-'+d.getFullYear()+'_'+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds()+'_CNN_state.json';
+                FileSaver.saveAs(blob, filename);
             }
         } else {
             // if not json is a raw binary img

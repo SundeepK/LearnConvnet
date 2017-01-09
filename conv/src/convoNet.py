@@ -2,7 +2,7 @@ import numpy
 from convMatrix import ConvMatrix
 import math
 import json
-
+from numpyCompressedArrayEncoder import NumpyCompressedArrayEncoder
 
 class ConvNet(object):
 
@@ -35,4 +35,4 @@ class ConvNet(object):
         json_array = []
         for layer in self.layers:
             json_array.append(layer.to_dict())
-        return json.dumps({'CNN': json_array})
+        return json.dumps({'CNN': json_array}, cls=NumpyCompressedArrayEncoder)
