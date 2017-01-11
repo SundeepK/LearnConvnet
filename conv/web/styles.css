@@ -9,6 +9,18 @@ body {
     width: 120px;
 }
 
+.input-control{
+    padding-top: 15px;
+}
+
+.input-file{
+    padding: 3px;
+}
+
+.alert-danger{
+    width: 110em;
+}
+
 .predictions {
     width: 110em;
     margin-top: 10px;

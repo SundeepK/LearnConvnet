@@ -8,6 +8,7 @@ import Graph from './Graph';
 import Controls from './Controls';
 import Stats from './Stats';
 import Predictions from './Predictions';
+import AlertDismissable from './AlertDismissable';
 import FileSaver from 'file-saver/FileSaver'
 
 const classes = {
@@ -23,8 +24,6 @@ const classes = {
     9: 'truck'
 };
 
-const uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {let r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});
-
 class MainLayout extends React.Component {
 
     constructor(props) {
@@ -34,14 +33,20 @@ class MainLayout extends React.Component {
             canPause: false,
             clearGraph: false,
             trainingPredictions: this.emptyObjectList(),
-            testPredictions: this.emptyObjectList()
+            testPredictions: this.emptyObjectList(),
+            alertVisible: false,
+            uid: ""
         };
         this.emptyObjectList = this.emptyObjectList.bind(this);
         this.getRunningAvgClassificationLoss = this.getRunningAvgClassificationLoss.bind(this);
         this.addLatestTestPrediction = this.addLatestTestPrediction.bind(this);
         this.addTestAccuracy = this.addTestAccuracy.bind(this);
         this.getRunningAvgTestAccuracy = this.getRunningAvgTestAccuracy.bind(this);
+        this.getJson = this.getJson.bind(this);
+        this.sendCnnJson = this.sendCnnJson.bind(this);
+        this.handleAlertDismiss = this.handleAlertDismiss.bind(this);
         this.count = 0;
+        this.contentToSend = null;
     }
 
     emptyObjectList(){
@@ -76,6 +81,8 @@ class MainLayout extends React.Component {
                 const d= new Date();
                 const filename = d.getDate()+'-'+d.getMonth() + 1 +'-'+d.getFullYear()+'_'+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds()+'_CNN_state.json';
                 FileSaver.saveAs(blob, filename);
+            } else if (stats.hasOwnProperty('uid')){
+                this.setState({uid: stats.uid});
             }
         } else {
             // if not json is a raw binary img
@@ -156,22 +163,22 @@ class MainLayout extends React.Component {
 
     pauseConvNet() {
         this.setState({canPause: false});
-        this.ws.send(JSON.stringify({ pause: true, id: uid}))
+        this.ws.send(JSON.stringify({ pause: true, id: this.state.uid}))
     }
 
     startConvNet() {
         this.setState({canPause: true});
-        this.ws.send(JSON.stringify({ pause: false, id: uid }))
+        this.ws.send(JSON.stringify({ pause: false, id: this.state.uid }))
     }
 
     saveConvNet(){
-        this.ws.send(JSON.stringify({ save: true, id: uid }))
+        this.ws.send(JSON.stringify({ save: true, id: this.state.uid }))
     }
 
     stopConvNet() {
         this.setState({stop: true, canPause: false, trainingPredictions: this.emptyObjectList()});
         this.count = 0;
-        this.ws.send(JSON.stringify({ stop: true, id: uid }))
+        this.ws.send(JSON.stringify({ stop: true, id: this.state.uid }))
     }
 
     getRunningAvgClassificationLoss(){
@@ -202,11 +209,59 @@ class MainLayout extends React.Component {
         return (totalAvgTestAccuracy / testAccuracy.length);
     }
 
+    loadConvNet(){
+        if (this.contentToSend) {
+            this.ws.send(this.contentToSend);
+        }
+    }
+
+    onFileSelect(files){
+        const cnnFile = files.target.files[0];
+        if (cnnFile && cnnFile.name) {
+            if (cnnFile.type == "application/json") {
+                const reader = new FileReader();
+                reader.onload = this.sendCnnJson;
+                reader.readAsText(cnnFile);
+            } else {
+                this.setState({alertVisible: true, alertMessage: "Not json file."});
+            }
+        }
+    }
+
+    sendCnnJson(e) {
+        const contents = e.target.result;
+        const json = this.getJson(contents);
+        if (json) {
+            this.contentToSend = contents;
+        } else {
+            this.setState({alertVisible: true, alertMessage: "Unable to load data."});
+        }
+    };
+
+    getJson(jsonString) {
+        try {
+            const o = JSON.parse(jsonString);
+            if (o && typeof o === "object") {
+                return o;
+            }
+        }
+        catch (e) {
+        }
+        return false;
+    };
+
+    handleAlertDismiss(){
+        this.setState({alertVisible: false, alertMessage: null});
+    }
+
     render() {
         return (
             <div>
                 <Header/>
                 <div className="container-main">
+                    <AlertDismissable alertVisible={this.state.alertVisible}
+                                      alertMessage={this.state.alertMessage}
+                                      handleAlertDismiss={this.handleAlertDismiss.bind(this)}/>
                     <div className="content">
                         <div className="controls">
                             <Panel collapsible defaultExpanded header="Controls & stats">
@@ -216,6 +271,8 @@ class MainLayout extends React.Component {
                                                   pauseConvNet={this.pauseConvNet.bind(this)}
                                                   saveConvNet={this.saveConvNet.bind(this)}
                                                   stopConvNet={this.stopConvNet.bind(this)}
+                                                  loadConvNet={this.loadConvNet.bind(this)}
+                                                  onFileSelect={this.onFileSelect.bind(this)}
                                                   startConvNet={this.startConvNet.bind(this)}/>
                                     </ListGroupItem>
                                     <ListGroupItem>

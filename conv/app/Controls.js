@@ -1,6 +1,7 @@
 import React from "react"
 import ButtonToolbar from 'react-bootstrap/lib/ButtonToolbar';
 import Button from 'react-bootstrap/lib/Button';
+import FormControl from 'react-bootstrap/lib/FormControl';
 
 class Controls extends React.Component {
 
@@ -24,6 +25,10 @@ class Controls extends React.Component {
                         <Button bsStyle="danger" onClick={this.props.stopConvNet}>Stop</Button>
                     </ButtonToolbar>
                 </div>
+                <ButtonToolbar className="input-control">
+                    <Button bsStyle="primary" onClick={this.props.loadConvNet}>Load CNN</Button>
+                    <FormControl  ref='fileUpload' className="input-file" type="file" onChange={this.props.onFileSelect}/>
+                </ButtonToolbar>
             </div>
         );
     }

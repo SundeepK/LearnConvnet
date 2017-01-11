@@ -10,6 +10,7 @@ import json
 import tornado.autoreload
 import os
 import signal
+import uuid
 from src.convNNRunner import ConvNNRunner
 
 from tornado.options import define, options, parse_command_line
@@ -35,7 +36,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         pass
 
     def open(self, *args):
-        pass
+        self.id = str(uuid.uuid4())
+        clients[self.id] = None
+        self.write_message({"uid": self.id}, False)
 
     def on_message(self, message):
         event = json.loads(message)
@@ -45,6 +48,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif {'stop', 'id'} <= set(event):
             self.handle_stop(event)
         elif {'save', 'id'} <= set(event):
+            self.handle_save(event)
+        elif {'CNN', 'id'} <= set(event):
             self.handle_save(event)
 
     def handle_save(self, event):
@@ -60,7 +65,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         if event['pause']:
             clients[event['id']].pause()
         else:
-            if event['id'] in clients:
+            if clients[event['id']] is not None:
                 clients[event['id']].resume()
             else:
                 print("starting new thread")
