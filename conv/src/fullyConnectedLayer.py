@@ -1,6 +1,7 @@
 import numpy
 from convMatrix import ConvMatrix
 import math
+import cifarUtils
 
 class FullyConnectedLayer(object):
 
@@ -12,6 +13,7 @@ class FullyConnectedLayer(object):
             self.filters = []
         else:
             self.filters = filters
+            self.depth = len(filters)
         if bias is None:
             bias = numpy.zeros(self.depth, dtype=float)
             bias.fill(0.1)
@@ -51,6 +53,14 @@ class FullyConnectedLayer(object):
         if len(self.filters) <= 0:
             for i in range(0, self.depth):
                 self.filters.append(ConvMatrix(z, y, x))
+
+    @classmethod
+    def from_dict(cls, dict):
+        filters = []
+        for f in dict['filters']:
+            filters.append(ConvMatrix.with_matrix(cifarUtils.decode_numpy(f['params']), cifarUtils.decode_numpy(f['grads'])))
+        obj = cls(len(filters), filters, ConvMatrix.with_matrix(cifarUtils.decode_numpy(dict['bias']['params']), cifarUtils.decode_numpy(dict['bias']['grads'])))
+        return obj
 
     def to_dict(self):
         out_filters = []

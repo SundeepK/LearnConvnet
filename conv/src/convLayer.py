@@ -4,6 +4,8 @@ import math
 import scipy
 import numpyUtils
 from scipy import signal
+import cifarUtils
+
 
 class ConvLayer(object):
 
@@ -123,10 +125,20 @@ class ConvLayer(object):
             for i in range(0, self.filter_d):
                 self.filters.append(ConvMatrix(d, self.filter_y, self.filter_x))
 
+    @classmethod
+    def from_dict(cls, dict):
+        filters = []
+        for f in dict['filters']:
+            filters.append(ConvMatrix.with_matrix(cifarUtils.decode_numpy(f['params']), cifarUtils.decode_numpy(f['grads'])))
+        obj = cls(dict['stride'], dict['padding'], filters[0].x, filters[0].y,
+                  len(filters), "", filters,
+                  ConvMatrix.with_matrix(cifarUtils.decode_numpy(dict['bias']['params']), cifarUtils.decode_numpy(dict['bias']['grads'])))
+        return obj
+
     def to_dict(self):
         out_filters = []
-        for filter in self.filters:
-            out_filters.append(filter.to_dict())
+        for f in self.filters:
+            out_filters.append(f.to_dict())
         return {
             'type': 'ConvLayer',
             'stride': self.stride,

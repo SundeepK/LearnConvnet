@@ -21,21 +21,24 @@ MAX_IMAGES_PER_BATCH = 3000
 
 class ConvNNRunner(threading.Thread):
 
-    def __init__(self, training_hook, id):
+    def __init__(self, training_hook, conv_id, layers=[]):
         threading.Thread.__init__(self)
-        l1 = InputLayer()
-        l2 = ConvLayer(1, 2, 5, 5, 16, "l8")
-        l3 = ReluLayer()
-        l4 = PoolLayer(2, 2, "l4")
-        l5 = ConvLayer(1, 2, 5, 5, 20, "l8")
-        l6 = ReluLayer()
-        l7 = PoolLayer(2, 2, "l7")
-        l8 = ConvLayer(1, 2, 5, 5, 20, "l8")
-        l9 = ReluLayer()
-        l10 = PoolLayer(2, 2, "l10")
-        l11 = FullyConnectedLayer()
-        l12 = SoftmaxLayer()
-        self.layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12]
+        if len(layers) > 0:
+            self.layers = layers
+        else:
+            l1 = InputLayer()
+            l2 = ConvLayer(1, 2, 5, 5, 16, "l8")
+            l3 = ReluLayer()
+            l4 = PoolLayer(2, 2, "l4")
+            l5 = ConvLayer(1, 2, 5, 5, 20, "l8")
+            l6 = ReluLayer()
+            l7 = PoolLayer(2, 2, "l7")
+            l8 = ConvLayer(1, 2, 5, 5, 20, "l8")
+            l9 = ReluLayer()
+            l10 = PoolLayer(2, 2, "l10")
+            l11 = FullyConnectedLayer()
+            l12 = SoftmaxLayer()
+            self.layers = [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12]
         self.convNet = ConvNet(self.layers)
         self.trainer = ConvNetTrainer(0.0001, 0.95, 0.00000001, 4, self.convNet)
         self.training_hook = training_hook
@@ -48,7 +51,24 @@ class ConvNNRunner(threading.Thread):
         self.should_stop = False
         self.pause_cond = threading.Condition(threading.Lock())
         self.image_augmentor = ImageAugmentor(1.2)
-        self.id = id
+        self.id = conv_id
+
+    @classmethod
+    def from_dict(cls, training_hook, id, dict):
+        layers = []
+        saved_layers = dict["CNN"]
+        for layer in saved_layers:
+            if layer['type'] == 'ConvLayer':
+                layers.append(ConvLayer.from_dict(layer))
+            elif layer['type'] == 'PoolLayer':
+                layers.append(PoolLayer.from_dict(layer))
+            elif layer['type'] == 'ReluLayer':
+                layers.append(ReluLayer())
+            elif layer['type'] == 'SoftmaxLayer':
+                layers.append(SoftmaxLayer())
+            elif layer['type'] == 'FullyConnectedLayer':
+                layers.append(FullyConnectedLayer.from_dict(layer))
+        return cls(training_hook, id, layers)
 
     def stop(self):
         if self.paused:

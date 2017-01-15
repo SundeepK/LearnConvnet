@@ -20,8 +20,8 @@ class ConvMatrix(object):
             self.grads = grad_matrix
 
     @classmethod
-    def with_matrix(cls, matrix):
-        obj = cls(matrix.shape[0], matrix.shape[1], matrix.shape[2], matrix, None)
+    def with_matrix(cls, matrix, grad=None):
+        obj = cls(matrix.shape[0], matrix.shape[1], matrix.shape[2], matrix, grad)
         return obj
 
     def x(self):
@@ -44,6 +44,6 @@ class ConvMatrix(object):
             'd': self.d,
             'y': self.y,
             'x': self.x,
-            'params': self.params,
-            'grads': self.grads
+            'params': self.params.reshape(self.d, self.y, self.x),
+            'grads': self.grads.reshape(self.d, self.y, self.x)
         }

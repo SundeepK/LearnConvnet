@@ -54,6 +54,11 @@ class PoolLayer(object):
     def get_params_and_grads(self):
         return []
 
+    @classmethod
+    def from_dict(cls, dict):
+        obj = cls(dict['stride'], dict['spatial_extent'], dict['name'])
+        return obj
+
     def to_dict(self):
         return {
             'type': 'PoolLayer',

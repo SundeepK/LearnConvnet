@@ -42,30 +42,39 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         event = json.loads(message)
-        print(message)
         if {'pause', 'id'} <= set(event):
             self.handle_pause(event)
         elif {'stop', 'id'} <= set(event):
             self.handle_stop(event)
         elif {'save', 'id'} <= set(event):
             self.handle_save(event)
-        elif {'CNN', 'id'} <= set(event):
-            self.handle_save(event)
+        elif {'loadedCNNData', 'id'} <= set(event):
+            self.handle_load(event)
 
     def handle_save(self, event):
+        print(clients.keys())
+        print(event['id'])
         clients[event['id']].save()
+
+    def handle_load(self,  event):
+        print("loading" )
+        clients[event['id']] = ConvNNRunner.from_dict(self, event['id'], json.loads(event['loadedCNNData']))
+        clients[event['id']].start()
 
     def handle_stop(self, event):
         if event['stop']:
-            if event['id'] in clients:
-                clients[event['id']].stop()
-                del clients[event['id']]
+            if event['id'] in clients and clients[event['id']] is not None:
+                try:
+                    clients[event['id']].stop()
+                except AttributeError:
+                    pass
+            del clients[event['id']]
 
     def handle_pause(self, event):
         if event['pause']:
             clients[event['id']].pause()
         else:
-            if clients[event['id']] is not None:
+            if event['id'] in clients and clients[event['id']] is not None:
                 clients[event['id']].resume()
             else:
                 print("starting new thread")
@@ -95,8 +104,11 @@ public_root = os.path.join(os.path.dirname(__file__), 'web')
 def on_shutdown():
     print('Shutting down')
     for key, runner in clients.iteritems():
-        print("stopping " + key)
-        runner.stop()
+        try:
+            print("stopping " + key)
+            runner.stop()
+        except AttributeError:
+             pass
     clients.clear()
     tornado.ioloop.IOLoop.instance().stop()
 

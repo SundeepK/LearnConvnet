@@ -211,7 +211,7 @@ class MainLayout extends React.Component {
 
     loadConvNet(){
         if (this.contentToSend) {
-            this.ws.send(this.contentToSend);
+            this.ws.send(JSON.stringify({ id: this.state.uid, loadedCNNData: this.contentToSend}));
         }
     }
 
